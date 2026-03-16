@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom'
 import { supabase } from './supabaseClient'
+import { IconLogOut } from './components/Icons'
 
 const MODULES = [
   {
@@ -8,6 +9,7 @@ const MODULES = [
     subtitle: 'Tu comodín de texto rápido',
     path: '/notas',
     hoverBorder: 'hover:border-blue-500',
+    hoverShadow: 'hover:shadow-[0_0_20px_rgba(59,130,246,0.2)]',
   },
   {
     emoji: '📋',
@@ -15,6 +17,7 @@ const MODULES = [
     subtitle: 'TARS, Personal, Universidad',
     path: '/trellos',
     hoverBorder: 'hover:border-emerald-500',
+    hoverShadow: 'hover:shadow-[0_0_20px_rgba(16,185,129,0.2)]',
   },
   {
     emoji: '📅',
@@ -22,6 +25,7 @@ const MODULES = [
     subtitle: 'Gestión del tiempo',
     path: '/calendarios',
     hoverBorder: 'hover:border-purple-500',
+    hoverShadow: 'hover:shadow-[0_0_20px_rgba(168,85,247,0.2)]',
   },
   {
     emoji: '📈',
@@ -29,6 +33,7 @@ const MODULES = [
     subtitle: 'Inversiones y control',
     path: '/finanzas',
     hoverBorder: 'hover:border-yellow-500',
+    hoverShadow: 'hover:shadow-[0_0_20px_rgba(234,179,8,0.2)]',
   },
   {
     emoji: '🗺️',
@@ -36,6 +41,7 @@ const MODULES = [
     subtitle: 'Lugares visitados',
     path: '/chronopath',
     hoverBorder: 'hover:border-orange-500',
+    hoverShadow: 'hover:shadow-[0_0_20px_rgba(249,115,22,0.2)]',
   },
 ]
 
@@ -48,31 +54,30 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-900 text-white px-4 py-6 sm:px-6 lg:px-8">
-      {/* Header */}
-      <header className="bg-slate-800 rounded-2xl shadow-xl shadow-slate-900/50 px-6 py-4 flex items-center justify-between mb-8">
-        <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-blue-500 to-indigo-500 bg-clip-text text-transparent">
+    <div className="min-h-screen bg-slate-900 text-white font-sans px-4 py-6 sm:px-6 lg:px-8">
+      <header className="flex justify-between items-center mb-10 p-4 bg-slate-800 rounded-2xl border border-slate-700 shadow-lg transition-all duration-300">
+        <h1 className="text-2xl sm:text-3xl font-black bg-gradient-to-r from-blue-400 to-indigo-500 bg-clip-text text-transparent">
           pedrOS
         </h1>
         <button
           type="button"
           onClick={handleLogout}
-          className="px-4 py-2 rounded-lg bg-red-900/40 text-red-300 border border-red-800/50 hover:bg-red-800/50 hover:text-red-200 hover:border-red-600/60 transition-colors duration-200 font-medium"
+          className="flex items-center gap-2 px-4 py-2 rounded-lg bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500/20 hover:text-red-300 transition-all duration-300 font-bold"
         >
+          <IconLogOut className="w-5 h-5" />
           Cerrar Sesión
         </button>
       </header>
 
-      {/* Grid de Módulos */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {MODULES.map((module) => (
           <button
             key={module.path}
             type="button"
             onClick={() => navigate(module.path)}
-            className={`group bg-slate-800 border-2 border-slate-700 rounded-2xl p-6 text-left cursor-pointer transition-all duration-300 ${module.hoverBorder} hover:shadow-lg hover:shadow-slate-900/50`}
+            className={`group bg-slate-800 rounded-2xl border-2 border-slate-700 shadow-lg p-6 text-left cursor-pointer transition-all duration-300 ${module.hoverBorder} ${module.hoverShadow}`}
           >
-            <span className="text-5xl block mb-4 transition-transform duration-300 group-hover:scale-110">
+            <span className="text-4xl block mb-4 transition-transform duration-300 origin-left group-hover:scale-110">
               {module.emoji}
             </span>
             <h2 className="text-xl font-semibold text-white mb-1">
