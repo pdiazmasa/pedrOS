@@ -515,7 +515,7 @@ export default function Chronopath() {
       </MapContainer>
 
       {/* ── TOP-RIGHT TOOLS ───────────────────────────────────── */}
-      <div className="absolute top-4 right-4 z-[1000] flex gap-2">
+      <div className="absolute bottom-4 right-4 sm:top-4 sm:bottom-auto z-[1000] flex gap-1.5 sm:gap-2">
         {[
           { label: 'Deshacer', icon: <IUndo className="w-4 h-4" />, onClick: undoAction },
           {
@@ -535,8 +535,8 @@ export default function Chronopath() {
 
       {/* ── PANEL IZQUIERDO ───────────────────────────────────── */}
       <div
-        className="absolute top-4 left-4 z-[1000] bg-white text-gray-900 shadow-[0_4px_20px_rgba(0,0,0,0.25)] rounded-xl flex flex-col transition-all duration-300 overflow-hidden"
-        style={{ width: 360, maxHeight: panelOpen ? '85vh' : 54 }}
+        className="absolute top-2 left-2 right-2 sm:top-4 sm:left-4 sm:right-auto z-[1000] bg-white text-gray-900 shadow-[0_4px_20px_rgba(0,0,0,0.25)] rounded-xl flex flex-col transition-all duration-300 overflow-hidden"
+        style={{ maxHeight: panelOpen ? '70vh' : 48 }}
       >
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-3 bg-gray-50 border-b border-gray-100 cursor-pointer select-none flex-shrink-0"

@@ -1007,7 +1007,7 @@ function InvestmentsTab({ investments, movements, userId, onRefresh }) {
       {/* Gráfica */}
       <ChartCard title="Evolución del Patrimonio">
         {chartData.length < 2 ? <EmptyState text="Importa un CSV o añade movimientos." /> : (
-          <ResponsiveContainer width="100%" height={280}>
+          <ResponsiveContainer width="100%" height={180}>
             <ComposedChart data={chartData} margin={{ top: 5, right: 5, left: 5, bottom: 0 }}>
               <defs>
                 {investments.map((inv, idx) => {
@@ -1107,7 +1107,7 @@ function InvestmentsTab({ investments, movements, userId, onRefresh }) {
 // ═══════════════════════════════════════════════════════════════
 function TransactionsPreviewList({ parsed, categories, updateCat }) {
   return (
-    <div className="max-h-72 overflow-y-auto space-y-1.5 pr-1">
+    <div className="max-h-52 sm:max-h-72 overflow-y-auto space-y-1.5 pr-1">
       {parsed.map((t, i) => (
         <div key={i} className="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 flex items-center gap-3">
           <span className="text-xs text-slate-500 flex-shrink-0 w-20">{t.date}</span>
@@ -1507,7 +1507,7 @@ function CuentaCorrienteTab({ transactions, categoryRules, categories, onSaveCat
         <>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             <ChartCard title="Gasto Neto por Categoría (mensual)">
-              <ResponsiveContainer width="100%" height={220}>
+              <ResponsiveContainer width="100%" height={180}>
                 <BarChart data={monthlyBars} margin={{ top: 5, right: 5, left: 0, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
                   <XAxis dataKey="month" tickFormatter={fmtMonthLabel} tick={{ fill: '#64748b', fontSize: 10 }} axisLine={false} tickLine={false} />
@@ -1520,7 +1520,7 @@ function CuentaCorrienteTab({ transactions, categoryRules, categories, onSaveCat
             </ChartCard>
 
             <ChartCard title="Ingresos vs Gastos">
-              <ResponsiveContainer width="100%" height={220}>
+              <ResponsiveContainer width="100%" height={180}>
                 <BarChart data={monthlyBars} margin={{ top: 5, right: 5, left: 0, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
                   <XAxis dataKey="month" tickFormatter={fmtMonthLabel} tick={{ fill: '#64748b', fontSize: 10 }} axisLine={false} tickLine={false} />
@@ -1535,7 +1535,7 @@ function CuentaCorrienteTab({ transactions, categoryRules, categories, onSaveCat
 
             <ChartCard title={`Distribución gasto neto — ${fmtMonthLabel(selMonth)}`}>
               {donutData.length === 0 ? <EmptyState text="Sin gastos este mes." /> : (
-                <ResponsiveContainer width="100%" height={220}>
+                <ResponsiveContainer width="100%" height={180}>
                   <PieChart>
                     <Pie data={donutData} cx="50%" cy="50%" innerRadius={55} outerRadius={85} dataKey="value" paddingAngle={2}>
                       {donutData.map((entry, i) => <Cell key={i} fill={getCatColor(entry.name)} />)}
@@ -1549,7 +1549,7 @@ function CuentaCorrienteTab({ transactions, categoryRules, categories, onSaveCat
 
             <ChartCard title={`Balance diario — ${fmtMonthLabel(selMonth)}`}>
               {dailyData.length === 0 ? <EmptyState text="Sin datos para este mes." /> : (
-                <ResponsiveContainer width="100%" height={220}>
+                <ResponsiveContainer width="100%" height={180}>
                   <BarChart data={dailyData} margin={{ top: 5, right: 5, left: 0, bottom: 0 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
                     <XAxis dataKey="day" tick={{ fill: '#64748b', fontSize: 10 }} axisLine={false} tickLine={false} />
@@ -1775,7 +1775,7 @@ function SuscripcionesTab({ subscriptions, userId, onRefresh }) {
 // ═══════════════════════════════════════════════════════════════
 const TABS = [
   { key: 'investments',    label: '📈 Inversiones' },
-  { key: 'cuenta',         label: '🏦 Cuenta Corriente' },
+  { key: 'cuenta',         label: '🏦 Cuenta' },
   { key: 'subscriptions',  label: '💳 Suscripciones' },
 ]
 
@@ -1861,11 +1861,11 @@ export default function Finanzas() {
     <div className="min-h-screen bg-slate-900 text-white font-sans">
       <div className="max-w-6xl mx-auto px-4 py-6 sm:px-6">
 
-        <header className="flex items-center justify-between mb-6 p-4 bg-slate-800 rounded-2xl border border-slate-700 shadow-lg">
+        <header className="flex items-center justify-between mb-4 sm:mb-6 p-3 sm:p-4 bg-slate-800 rounded-2xl border border-slate-700 shadow-lg">
           <button type="button" onClick={() => navigate('/')} className="text-slate-400 hover:text-white transition-colors" aria-label="Volver">
             <IArrowLeft className="w-6 h-6" />
           </button>
-          <h1 className="text-2xl font-black bg-gradient-to-r from-yellow-400 to-amber-500 bg-clip-text text-transparent">
+          <h1 className="text-lg sm:text-2xl font-black bg-gradient-to-r from-yellow-400 to-amber-500 bg-clip-text text-transparent">
             📊 Finanzas ERP
           </h1>
           <div className="w-8" />
@@ -1874,7 +1874,7 @@ export default function Finanzas() {
         <div className="flex gap-1 mb-6 bg-slate-800 p-1 rounded-xl border border-slate-700">
           {TABS.map(({ key, label }) => (
             <button key={key} type="button" onClick={() => setTab(key)}
-              className={`flex-1 py-2.5 rounded-lg text-sm font-bold transition-all duration-200 ${tab === key ? 'bg-yellow-500 text-slate-900 shadow' : 'text-slate-400 hover:text-white hover:bg-slate-700'}`}>
+              className={`flex-1 py-2 sm:py-2.5 rounded-lg text-xs sm:text-sm font-bold transition-all duration-200 leading-tight ${tab === key ? 'bg-yellow-500 text-slate-900 shadow' : 'text-slate-400 hover:text-white hover:bg-slate-700'}`}>
               {label}
             </button>
           ))}

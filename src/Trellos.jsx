@@ -683,7 +683,7 @@ export default function Trellos() {
 
   return (
     <div className="min-h-screen bg-slate-900 text-white font-sans transition-all duration-300">
-      <header className="sticky top-0 z-20 bg-slate-900/95 backdrop-blur-sm border-b border-slate-700 px-4 py-3 sm:px-6 flex items-center justify-between">
+      <header className="sticky top-0 z-20 bg-slate-900/95 backdrop-blur-sm border-b border-slate-700 px-3 py-2.5 sm:px-6 sm:py-3 flex items-center justify-between">
         <div className="flex items-center gap-4">
           <button
             type="button"
@@ -704,7 +704,7 @@ export default function Trellos() {
 
         <div className="flex items-center gap-3">
           {activeBoard && (
-            <div className="hidden md:flex items-center gap-2 bg-slate-800 border border-slate-700 rounded-2xl px-3 py-2 shadow-lg transition-all duration-300">
+            <div className="flex items-center gap-2 bg-slate-800 border border-slate-700 rounded-2xl px-2 sm:px-3 py-1.5 sm:py-2 shadow-lg transition-all duration-300">
               <span className="text-slate-400 text-sm font-bold">Vinculado al calendario</span>
               <select
                 value={activeBoard.default_calendar_id || ''}
@@ -995,7 +995,7 @@ export default function Trellos() {
                     .map((col) => (
                       <div
                         key={col.id}
-                        className="bg-slate-800 p-4 rounded-xl shadow-lg border border-slate-700 min-w-[300px] flex-shrink-0 h-max transition-all duration-300"
+                        className="bg-slate-800 p-3 sm:p-4 rounded-xl shadow-lg border border-slate-700 min-w-[260px] sm:min-w-[300px] flex-shrink-0 h-max transition-all duration-300"
                       >
                         <div className="flex items-center justify-between gap-3 mb-3">
                           <h2 className="font-bold text-slate-200 truncate">{col.name}</h2>
@@ -1107,7 +1107,7 @@ export default function Trellos() {
                       </div>
                     ))}
 
-                  <div className="min-w-[300px] flex-shrink-0">
+                  <div className="min-w-[260px] sm:min-w-[300px] flex-shrink-0">
                     {isCreatingColumn ? (
                       <form onSubmit={handleAddColumn} className={`${panel} p-4`}>
                         <input
@@ -1146,14 +1146,14 @@ export default function Trellos() {
       {/* Modal edición tarjeta */}
       {modalCard && (
         <div
-          className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 transition-all duration-300"
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center z-50 p-0 sm:p-4 transition-all duration-300 overflow-y-auto"
           onClick={closeAndSaveModal}
           role="dialog"
           aria-modal="true"
           aria-label="Editar tarjeta"
         >
           <div
-            className="bg-slate-800 rounded-2xl border border-slate-700 shadow-2xl w-full max-w-2xl p-6 transition-all duration-300"
+            className="bg-slate-800 rounded-t-3xl sm:rounded-2xl border border-slate-700 shadow-2xl w-full sm:max-w-2xl p-5 sm:p-6 transition-all duration-300 max-h-[90vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-start justify-between gap-3 mb-5">

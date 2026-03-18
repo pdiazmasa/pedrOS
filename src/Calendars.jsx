@@ -486,9 +486,9 @@ export default function Calendars() {
         </button>
       </header>
 
-      <main className="p-4 sm:p-6 grid grid-cols-1 lg:grid-cols-[360px_1fr] gap-6">
+      <main className="p-3 sm:p-6 grid grid-cols-1 lg:grid-cols-[320px_1fr] gap-4 sm:gap-6">
         {/* Sidebar */}
-        <aside className="bg-slate-800 rounded-2xl border border-slate-700 shadow-lg p-4 transition-all duration-300 h-max">
+        <aside className="bg-slate-800 rounded-2xl border border-slate-700 shadow-lg p-4 transition-all duration-300 h-max order-2 lg:order-1">
           <h2 className="font-bold text-slate-200 mb-4">Mis calendarios</h2>
 
           <form onSubmit={createCalendar} className="space-y-3 mb-6">
@@ -633,9 +633,9 @@ export default function Calendars() {
               plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
               initialView="dayGridMonth"
               headerToolbar={{
-                left: 'prev,next today',
+                left: 'prev,next',
                 center: 'title',
-                right: 'dayGridMonth,timeGridWeek,timeGridDay',
+                right: 'dayGridMonth,timeGridWeek',
               }}
               selectable
               selectMirror
@@ -687,7 +687,7 @@ export default function Calendars() {
           aria-label="Editar evento"
         >
           <div
-            className="bg-slate-800 rounded-2xl border border-slate-700 shadow-2xl w-full max-w-2xl p-6 transition-all duration-300"
+            className="bg-slate-800 rounded-t-3xl sm:rounded-2xl border border-slate-700 shadow-2xl w-full sm:max-w-2xl p-5 sm:p-6 transition-all duration-300"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-start justify-between gap-3 mb-5">

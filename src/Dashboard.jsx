@@ -65,22 +65,22 @@ export default function Dashboard() {
           className="flex items-center gap-2 px-4 py-2 rounded-lg bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500/20 hover:text-red-300 transition-all duration-300 font-bold"
         >
           <IconLogOut className="w-5 h-5" />
-          Cerrar Sesión
+          <span className="hidden sm:inline">Cerrar Sesión</span>
         </button>
       </header>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
         {MODULES.map((module) => (
           <button
             key={module.path}
             type="button"
             onClick={() => navigate(module.path)}
-            className={`group bg-slate-800 rounded-2xl border-2 border-slate-700 shadow-lg p-6 text-left cursor-pointer transition-all duration-300 ${module.hoverBorder} ${module.hoverShadow}`}
+            className={`group bg-slate-800 rounded-2xl border-2 border-slate-700 shadow-lg p-4 sm:p-6 text-left cursor-pointer transition-all duration-300 ${module.hoverBorder} ${module.hoverShadow}`}
           >
-            <span className="text-4xl block mb-4 transition-transform duration-300 origin-left group-hover:scale-110">
+            <span className="text-3xl sm:text-4xl block mb-3 sm:mb-4 transition-transform duration-300 origin-left group-hover:scale-110">
               {module.emoji}
             </span>
-            <h2 className="text-xl font-semibold text-white mb-1">
+            <h2 className="text-base sm:text-xl font-semibold text-white mb-1">
               {module.title}
             </h2>
             <p className="text-slate-400 text-sm">

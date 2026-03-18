@@ -35,7 +35,7 @@ export default function Login() {
 
   return (
     <div className="min-h-screen bg-slate-900 text-white font-sans flex flex-col items-center justify-center px-4">
-      <div className="w-96 p-8 bg-slate-800 rounded-2xl border border-slate-700 shadow-2xl shadow-slate-950/50 transition-all duration-300">
+      <div className="w-full max-w-sm p-6 sm:p-8 bg-slate-800 rounded-2xl border border-slate-700 shadow-2xl shadow-slate-950/50 transition-all duration-300">
         <h1 className="font-black text-2xl text-center mb-2 bg-gradient-to-r from-blue-400 to-indigo-500 bg-clip-text text-transparent">
           pedrOS
         </h1>

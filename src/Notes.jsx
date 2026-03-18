@@ -319,7 +319,7 @@ export default function Notes() {
                 onDrop={(e) => !showTrash && handleDrop(e, note.id)}
                 onDragEnd={handleDragEnd}
                 onClick={() => !showTrash && setModalNote({ ...note })}
-                className={`relative group bg-slate-800 p-5 rounded-xl border border-slate-700 hover:border-slate-500 shadow-lg h-max cursor-pointer transition-all duration-300 ${showTrash ? 'opacity-80 border-red-900/30' : ''} ${draggingId === note.id ? 'opacity-50 border-dashed border-blue-400' : ''} ${dragOverId === note.id ? 'ring-2 ring-blue-500 border-blue-500' : ''}`}
+                className={`relative group bg-slate-800 p-4 sm:p-5 rounded-xl border border-slate-700 hover:border-slate-500 shadow-lg h-max cursor-pointer transition-all duration-300 ${showTrash ? 'opacity-80 border-red-900/30' : ''} ${draggingId === note.id ? 'opacity-50 border-dashed border-blue-400' : ''} ${dragOverId === note.id ? 'ring-2 ring-blue-500 border-blue-500' : ''}`}
               >
                 {!showTrash && (
                   <span
@@ -397,7 +397,7 @@ export default function Notes() {
                 onChange={(e) => setModalNote((m) => ({ ...m, content: e.target.value }))}
                 onKeyDown={handleTabInTextarea}
                 placeholder="Contenido..."
-                rows={12}
+                rows={8}
                 className={`${inputClasses} resize-none`}
               />
             </div>
