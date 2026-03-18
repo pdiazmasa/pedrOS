@@ -1,0 +1,60 @@
+/* FullCalendar dark mode for pedrOS */
+
+.fc {
+  --fc-page-bg-color: transparent;
+  --fc-neutral-bg-color: rgba(30, 41, 59, 0.45); /* slate-800 */
+  --fc-border-color: rgb(51 65 85); /* slate-700 */
+  --fc-today-bg-color: rgba(59, 130, 246, 0.08); /* blue-500 */
+  --fc-event-border-color: transparent;
+  --fc-event-text-color: #fff;
+  --fc-button-bg-color: rgb(51 65 85); /* slate-700 */
+  --fc-button-border-color: rgb(51 65 85);
+  --fc-button-text-color: rgb(226 232 240); /* slate-200 */
+  --fc-button-hover-bg-color: rgb(71 85 105); /* slate-600 */
+  --fc-button-hover-border-color: rgb(71 85 105);
+  --fc-button-active-bg-color: rgb(37 99 235); /* blue-600 */
+  --fc-button-active-border-color: rgb(37 99 235);
+}
+
+.fc .fc-toolbar-title {
+  color: rgb(226 232 240);
+  font-weight: 700;
+}
+
+.fc .fc-scrollgrid,
+.fc .fc-scrollgrid-section > td,
+.fc .fc-scrollgrid-section-header > td {
+  border-color: rgb(51 65 85);
+}
+
+.fc .fc-col-header-cell-cushion,
+.fc .fc-daygrid-day-number {
+  color: rgb(203 213 225); /* slate-300 */
+}
+
+.fc .fc-timegrid-axis-cushion,
+.fc .fc-timegrid-slot-label-cushion {
+  color: rgb(148 163 184); /* slate-400 */
+}
+
+.fc .fc-button {
+  border-radius: 0.5rem; /* rounded-lg */
+  transition: all 300ms;
+  font-weight: 700;
+}
+
+.fc .fc-button:focus {
+  box-shadow: 0 0 0 1px rgb(59 130 246);
+}
+
+.fc .fc-daygrid-event,
+.fc .fc-timegrid-event {
+  border-radius: 0.5rem;
+}
+
+.fc .fc-popover {
+  background: rgb(30 41 59);
+  border: 1px solid rgb(51 65 85);
+  color: rgb(226 232 240);
+}
+

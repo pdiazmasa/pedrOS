@@ -5,7 +5,10 @@ import Login from './Login'
 import Dashboard from './Dashboard'
 import Notes from './Notes'
 import Trellos from './Trellos'
+import Calendars from './Calendars'
 import Passwords from './Passwords'
+import Finanzas from './Finanzas'
+import Chronopath from './Chronopath'
 import './App.css'
 
 export default function App() {
@@ -47,7 +50,10 @@ export default function App() {
         <Route path="/" element={<Dashboard />} />
         <Route path="/notas" element={<Notes />} />
         <Route path="/trellos" element={<Trellos />} />
+        <Route path="/calendarios" element={<Calendars />} />
         <Route path="/contraseñas" element={<Passwords />} />
+        <Route path="/finanzas" element={<Finanzas />} />
+        <Route path="/chronopath" element={<Chronopath />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
