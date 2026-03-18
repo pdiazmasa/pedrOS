@@ -7,27 +7,15 @@ export default function Login() {
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState({ type: '', text: '' })
-  const [isSignUp, setIsSignUp] = useState(false)
-
   async function handleSubmit(e) {
     e.preventDefault()
     setLoading(true)
     setMessage({ type: '', text: '' })
-
     try {
-      if (isSignUp) {
-        const { data, error } = await supabase.auth.signUp({ email, password })
-        if (error) throw error
-        setMessage({
-          type: 'success',
-          text: 'Revisa tu correo para confirmar la cuenta (si tienes confirmación activada).',
-        })
-      } else {
-        const { error } = await supabase.auth.signInWithPassword({ email, password })
-        if (error) throw error
-      }
+      const { error } = await supabase.auth.signInWithPassword({ email, password })
+      if (error) throw error
     } catch (err) {
-      setMessage({ type: 'error', text: err.message || 'Error al iniciar sesión' })
+      setMessage({ type: 'error', text: err.message || 'Credenciales incorrectas' })
     } finally {
       setLoading(false)
     }
@@ -40,7 +28,7 @@ export default function Login() {
           pedrOS
         </h1>
         <p className="text-slate-400 text-sm text-center mb-6">
-          {isSignUp ? 'Crear cuenta' : 'Inicia sesión para continuar'}
+          Acceso restringido
         </p>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -100,20 +88,11 @@ export default function Login() {
             disabled={loading}
             className="w-full py-2.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-bold transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {loading ? 'Espera...' : isSignUp ? 'Registrarse' : 'Iniciar sesión'}
+            {loading ? 'Espera...' : 'Iniciar sesión'}
           </button>
         </form>
 
-        <button
-          type="button"
-          onClick={() => {
-            setIsSignUp(!isSignUp)
-            setMessage({ type: '', text: '' })
-          }}
-          className="w-full mt-4 py-2 rounded-lg text-sm text-slate-400 hover:text-white bg-slate-700/50 hover:bg-slate-700 transition-all duration-300"
-        >
-          {isSignUp ? '¿Ya tienes cuenta? Iniciar sesión' : '¿No tienes cuenta? Registrarse'}
-        </button>
+
       </div>
     </div>
   )
