@@ -43,6 +43,14 @@ const MODULES = [
     hoverBorder: 'hover:border-orange-500',
     hoverShadow: 'hover:shadow-[0_0_20px_rgba(249,115,22,0.2)]',
   },
+  {
+    emoji: '🔐',
+    title: 'Contraseñas',
+    subtitle: 'Bóveda 007',
+    path: '/contraseñas',
+    hoverBorder: 'hover:border-emerald-500',
+    hoverShadow: 'hover:shadow-[0_0_20px_rgba(16,185,129,0.2)]',
+  },
 ]
 
 export default function Dashboard() {
