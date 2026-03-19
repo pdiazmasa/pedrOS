@@ -514,16 +514,6 @@ export default function Chronopath() {
         <FlyTo target={flyTarget} />
       </MapContainer>
 
-      {/* ── BACK BUTTON — top-left like all other modules ─────── */}
-      <button
-        onClick={() => navigate('/')}
-        className="absolute top-2 right-2 sm:top-4 sm:right-auto sm:left-4 z-[1001] flex items-center gap-1.5 bg-white/95 border border-gray-300 rounded-lg px-3 py-2 text-sm font-semibold text-gray-600 shadow hover:shadow-md hover:-translate-y-0.5 transition-all"
-        aria-label="Volver a pedrOS"
-      >
-        <IArrow className="w-4 h-4" />
-        <span className="hidden sm:inline">pedrOS</span>
-      </button>
-
       {/* ── TOP-RIGHT TOOLS ───────────────────────────────────── */}
       <div className="absolute bottom-4 right-4 sm:top-4 sm:bottom-auto z-[1000] flex gap-1.5 sm:gap-2">
         {[
@@ -548,10 +538,22 @@ export default function Chronopath() {
         style={{ maxHeight: panelOpen ? '70vh' : 48 }}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 bg-gray-50 border-b border-gray-100 cursor-pointer select-none flex-shrink-0"
-          onClick={() => setPanelOpen(!panelOpen)}>
-          <h1 className="text-lg font-bold text-gray-800">🌍 Diario de Viajes 🌍</h1>
-          <IChevD className={`w-4 h-4 text-gray-500 transition-transform ${panelOpen ? '' : '-rotate-90'}`} />
+        <div className="flex items-center gap-2 px-3 py-3 bg-gray-50 border-b border-gray-100 select-none flex-shrink-0">
+          {/* Back to pedrOS */}
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); navigate('/') }}
+            className="flex items-center gap-1 text-gray-400 hover:text-gray-700 transition-colors flex-shrink-0 px-1 py-1 rounded-lg hover:bg-gray-200"
+            aria-label="Volver a pedrOS"
+            title="Volver a pedrOS"
+          >
+            <IArrow className="w-4 h-4" />
+          </button>
+          {/* Title — clickable to toggle panel */}
+          <div className="flex items-center justify-between flex-1 cursor-pointer" onClick={() => setPanelOpen(!panelOpen)}>
+            <h1 className="text-base font-bold text-gray-800">🌍 Diario de Viajes 🌍</h1>
+            <IChevD className={`w-4 h-4 text-gray-500 transition-transform flex-shrink-0 ${panelOpen ? '' : '-rotate-90'}`} />
+          </div>
         </div>
 
         {/* Scrollable content */}

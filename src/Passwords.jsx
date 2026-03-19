@@ -153,6 +153,8 @@ const ILock   = (p) => <Ic {...p} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-
 const IShield = (p) => <Ic {...p} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
 const ILoader = (p) => <Ic {...p} d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83" />
 const IKey    = (p) => <Ic {...p} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+const IFolder = (p) => <Ic {...p} d="M3 7a2 2 0 012-2h4l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V7z" />
+const IChevR  = (p) => <Ic {...p} d="M9 5l7 7-7 7" />
 
 // ─── Shared styles ─────────────────────────────────────────────
 const inp = 'w-full px-4 py-3 rounded-xl bg-slate-900 border border-emerald-900/50 text-white placeholder-emerald-900/60 focus:outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 transition-all text-sm'
@@ -374,17 +376,18 @@ function EntryCard({ entry, cryptoKey, onEdit, onDelete }) {
 // ═══════════════════════════════════════════════════════════════
 // ADD / EDIT MODAL
 // ═══════════════════════════════════════════════════════════════
-function EntryModal({ entry, cryptoKey, userId, onSaved, onClose }) {
+function EntryModal({ entry, cryptoKey, userId, folders, onSaved, onClose }) {
   const isEdit = !!entry
 
   // Decrypt existing values for editing
-  const [service,  setService]  = useState(entry?.service ?? '')
-  const [email,    setEmail]    = useState('')
-  const [password, setPassword] = useState('')
-  const [showPwd,  setShowPwd]  = useState(false)
-  const [saving,   setSaving]   = useState(false)
-  const [loading,  setLoading]  = useState(isEdit)
-  const [err,      setErr]      = useState('')
+  const [service,   setService]   = useState(entry?.service ?? '')
+  const [email,     setEmail]     = useState('')
+  const [password,  setPassword]  = useState('')
+  const [folderId,  setFolderId]  = useState(entry?.folder_id ?? '')
+  const [showPwd,   setShowPwd]   = useState(false)
+  const [saving,    setSaving]    = useState(false)
+  const [loading,   setLoading]   = useState(isEdit)
+  const [err,       setErr]       = useState('')
 
   useEffect(() => {
     if (!isEdit) return
@@ -411,10 +414,11 @@ function EntryModal({ entry, cryptoKey, userId, onSaved, onClose }) {
         encrypt(password.trim(), cryptoKey),
       ])
       const payload = {
-        service: service.trim(), // service name is not sensitive
-        email:    encEmail,
-        password: encPassword,
-        user_id:  userId,
+        service:   service.trim(),
+        email:     encEmail,
+        password:  encPassword,
+        user_id:   userId,
+        folder_id: folderId || null,
       }
       if (isEdit) {
         const { error } = await supabase.from('vault_entries').update(payload).eq('id', entry.id)
@@ -454,6 +458,19 @@ function EntryModal({ entry, cryptoKey, userId, onSaved, onClose }) {
             <div>
               <label className="block text-xs font-semibold text-emerald-900 uppercase tracking-wide mb-1.5">Servicio *</label>
               <input className={inp} placeholder="Google, Netflix, GitHub..." value={service} onChange={e => setService(e.target.value)} autoFocus />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-emerald-900 uppercase tracking-wide mb-1.5">Carpeta</label>
+              <select
+                className={`${inp} appearance-none`}
+                value={folderId}
+                onChange={e => setFolderId(e.target.value)}
+              >
+                <option value="">Sin carpeta</option>
+                {folders.map(f => (
+                  <option key={f.id} value={f.id}>{f.icon} {f.name}</option>
+                ))}
+              </select>
             </div>
             <div>
               <label className="block text-xs font-semibold text-emerald-900 uppercase tracking-wide mb-1.5">Email / Usuario</label>
@@ -721,35 +738,101 @@ if (typeof crypto === 'undefined' || !crypto.subtle) {
   console.warn('[Bóveda 007] Web Crypto API no disponible. El cifrado no funcionará.')
 }
 
+// ── FolderModal — create/rename folder ────────────────────────
+function FolderModal({ folder, userId, onSaved, onClose }) {
+  const isEdit = !!folder
+  const ICONS = ['📁','🏦','💼','🎮','🏠','❤️','🛒','🎓','✈️','🔧','📱','🌐']
+  const [name,    setName]    = useState(folder?.name ?? '')
+  const [icon,    setIcon]    = useState(folder?.icon ?? '📁')
+  const [saving,  setSaving]  = useState(false)
+  const [err,     setErr]     = useState('')
+
+  async function handleSave() {
+    if (!name.trim()) return setErr('El nombre es obligatorio.')
+    setSaving(true)
+    const payload = { name: name.trim(), icon, user_id: userId }
+    const { error } = isEdit
+      ? await supabase.from('vault_folders').update(payload).eq('id', folder.id)
+      : await supabase.from('vault_folders').insert(payload)
+    if (error) { setErr(error.message); setSaving(false); return }
+    onSaved()
+  }
+
+  return (
+    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
+      onClick={e => e.target === e.currentTarget && onClose()}>
+      <div className="bg-slate-900 border border-emerald-900/50 rounded-t-3xl sm:rounded-2xl p-6 w-full sm:max-w-sm shadow-2xl">
+        <div className="flex items-center justify-between mb-5">
+          <h3 className="font-bold text-white text-lg">{isEdit ? 'Editar carpeta' : 'Nueva carpeta'}</h3>
+          <button onClick={onClose} className="text-slate-600 hover:text-white text-xl leading-none transition-colors">✕</button>
+        </div>
+        <div className="space-y-4">
+          <div>
+            <label className="block text-xs font-semibold text-emerald-900 uppercase tracking-wide mb-1.5">Nombre *</label>
+            <input
+              className="w-full px-4 py-3 rounded-xl bg-slate-800 border border-emerald-900/50 text-white placeholder-slate-600 focus:outline-none focus:border-emerald-600 transition-all text-sm"
+              placeholder="Banco, Trabajo, Personal..."
+              value={name}
+              onChange={e => setName(e.target.value)}
+              autoFocus
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-emerald-900 uppercase tracking-wide mb-2">Icono</label>
+            <div className="flex flex-wrap gap-2">
+              {ICONS.map(ic => (
+                <button key={ic} type="button" onClick={() => setIcon(ic)}
+                  className={`w-9 h-9 rounded-lg text-lg flex items-center justify-center transition-all ${icon === ic ? 'bg-emerald-700/40 ring-2 ring-emerald-600' : 'bg-slate-800 hover:bg-slate-700'}`}>
+                  {ic}
+                </button>
+              ))}
+            </div>
+          </div>
+          {err && <p className="text-red-400 text-xs bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">{err}</p>}
+          <div className="flex gap-3 pt-1">
+            <button onClick={onClose} className="flex-1 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-sm transition-all">Cancelar</button>
+            <button onClick={handleSave} disabled={saving}
+              className="flex-1 py-3 rounded-xl bg-emerald-700 hover:bg-emerald-600 text-white font-bold text-sm disabled:opacity-50 transition-all">
+              {saving ? 'Guardando...' : isEdit ? 'Guardar' : 'Crear'}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export default function Passwords() {
   const navigate = useNavigate()
 
-  const [user,       setUser]       = useState(null)
-  const [cryptoKey,  setCryptoKey]  = useState(null)  // AES CryptoKey, only in memory
-  const [entries,    setEntries]    = useState([])
-  const [loading,    setLoading]    = useState(true)
-  const [modal,      setModal]      = useState(null)   // null | 'add' | entry object
-  const [search,     setSearch]     = useState('')
+  const [user,          setUser]          = useState(null)
+  const [cryptoKey,     setCryptoKey]     = useState(null)
+  const [entries,       setEntries]       = useState([])
+  const [folders,       setFolders]       = useState([])
+  const [loading,       setLoading]       = useState(true)
+  const [modal,         setModal]         = useState(null)   // null | 'add' | entry obj
+  const [folderModal,   setFolderModal]   = useState(null)   // null | 'new' | folder obj
+  const [activeFolderId, setActiveFolderId] = useState(null) // null = todas
+  const [search,        setSearch]        = useState('')
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user: u } }) => setUser(u ?? null))
   }, [])
 
-  const loadEntries = useCallback(async (uid) => {
+  const loadAll = useCallback(async (uid) => {
     setLoading(true)
-    const { data } = await supabase
-      .from('vault_entries').select('*').eq('user_id', uid).order('service')
-    setEntries(data ?? [])
+    const [entriesRes, foldersRes] = await Promise.all([
+      supabase.from('vault_entries').select('*').eq('user_id', uid).order('service'),
+      supabase.from('vault_folders').select('*').eq('user_id', uid).order('name'),
+    ])
+    setEntries(entriesRes.data ?? [])
+    setFolders(foldersRes.data ?? [])
     setLoading(false)
   }, [])
 
   useEffect(() => {
-    if (cryptoKey && user) loadEntries(user.id)
-  }, [cryptoKey, user, loadEntries])
-
-  function handleUnlock(key) {
-    setCryptoKey(key)
-  }
+    if (cryptoKey && user) loadAll(user.id)
+  }, [cryptoKey, user, loadAll])
 
   async function handleDelete(id) {
     if (!window.confirm('¿Eliminar esta entrada permanentemente?')) return
@@ -757,9 +840,36 @@ export default function Passwords() {
     setEntries(prev => prev.filter(e => e.id !== id))
   }
 
-  const filtered = entries.filter(e =>
-    e.service.toLowerCase().includes(search.toLowerCase())
-  )
+  async function handleDeleteFolder(id) {
+    if (!window.confirm('¿Eliminar carpeta? Las contraseñas dentro quedarán sin carpeta.')) return
+    await supabase.from('vault_folders').delete().eq('id', id)
+    setFolders(prev => prev.filter(f => f.id !== id))
+    setEntries(prev => prev.map(e => e.folder_id === id ? { ...e, folder_id: null } : e))
+    if (activeFolderId === id) setActiveFolderId(null)
+  }
+
+  // Filtered entries
+  const filtered = entries.filter(e => {
+    const matchSearch = e.service.toLowerCase().includes(search.toLowerCase())
+    const matchFolder = activeFolderId === null || e.folder_id === activeFolderId
+    return matchSearch && matchFolder
+  })
+
+  // Group by folder when no active filter and no search
+  const showGrouped = !search && activeFolderId === null
+
+  // Build grouped structure
+  const folderMap = Object.fromEntries(folders.map(f => [f.id, f]))
+  const grouped = showGrouped ? [
+    ...folders.map(f => ({
+      folder: f,
+      entries: entries.filter(e => e.folder_id === f.id),
+    })).filter(g => g.entries.length > 0),
+    ...(entries.some(e => !e.folder_id) ? [{
+      folder: null,
+      entries: entries.filter(e => !e.folder_id),
+    }] : []),
+  ] : null
 
   if (!user) {
     return (
@@ -770,7 +880,7 @@ export default function Passwords() {
   }
 
   if (!cryptoKey) {
-    return <MasterGate userId={user.id} onUnlock={handleUnlock} />
+    return <MasterGate userId={user.id} onUnlock={key => setCryptoKey(key)} />
   }
 
   return (
@@ -779,90 +889,159 @@ export default function Passwords() {
       {/* Header */}
       <header className="sticky top-0 z-20 bg-black/95 backdrop-blur-sm border-b border-emerald-900/30 px-4 py-3 sm:px-6">
         <div className="flex items-center justify-between mb-3">
-          <button
-            type="button"
-            onClick={() => navigate('/')}
-            className="text-emerald-900 hover:text-emerald-600 transition-colors"
-            aria-label="Volver"
-          >
+          <button type="button" onClick={() => navigate('/')}
+            className="text-emerald-900 hover:text-emerald-600 transition-colors" aria-label="Volver">
             <IArrow className="w-6 h-6" />
           </button>
           <h1 className="text-lg font-black tracking-widest uppercase text-emerald-600 flex items-center gap-2">
             <ILock className="w-5 h-5" /> Bóveda 007
           </h1>
-          <button
-            type="button"
-            onClick={() => setModal('add')}
-            className="w-9 h-9 rounded-xl bg-emerald-900/30 hover:bg-emerald-900/60 border border-emerald-900/40 flex items-center justify-center text-emerald-600 hover:text-emerald-400 transition-all"
-            aria-label="Añadir"
-          >
-            <IPlus className="w-5 h-5" />
-          </button>
+          <div className="flex gap-2">
+            <button type="button" onClick={() => setFolderModal('new')}
+              className="w-9 h-9 rounded-xl bg-emerald-950/40 hover:bg-emerald-900/60 border border-emerald-900/40 flex items-center justify-center text-emerald-800 hover:text-emerald-500 transition-all"
+              aria-label="Nueva carpeta" title="Nueva carpeta">
+              <IFolder className="w-4 h-4" />
+            </button>
+            <button type="button" onClick={() => setModal('add')}
+              className="w-9 h-9 rounded-xl bg-emerald-900/30 hover:bg-emerald-900/60 border border-emerald-900/40 flex items-center justify-center text-emerald-600 hover:text-emerald-400 transition-all"
+              aria-label="Añadir contraseña">
+              <IPlus className="w-5 h-5" />
+            </button>
+          </div>
         </div>
+
+        {/* Search */}
         <input
           className="w-full px-4 py-2.5 rounded-xl bg-emerald-950/20 border border-emerald-900/30 text-emerald-400 placeholder-emerald-950 focus:outline-none focus:border-emerald-800 transition-all text-sm"
           placeholder="Buscar servicio..."
           value={search}
           onChange={e => setSearch(e.target.value)}
         />
+
+        {/* Folder filter pills */}
+        {folders.length > 0 && (
+          <div className="flex gap-2 mt-2.5 overflow-x-auto pb-0.5 scrollbar-none">
+            <button
+              onClick={() => setActiveFolderId(null)}
+              className={`flex-shrink-0 px-3 py-1 rounded-full text-xs font-semibold transition-all ${
+                activeFolderId === null
+                  ? 'bg-emerald-700/40 text-emerald-400 ring-1 ring-emerald-700'
+                  : 'bg-emerald-950/30 text-emerald-900 hover:text-emerald-700'
+              }`}
+            >
+              Todas
+            </button>
+            {folders.map(f => (
+              <button key={f.id}
+                onClick={() => setActiveFolderId(activeFolderId === f.id ? null : f.id)}
+                className={`flex-shrink-0 flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold transition-all ${
+                  activeFolderId === f.id
+                    ? 'bg-emerald-700/40 text-emerald-400 ring-1 ring-emerald-700'
+                    : 'bg-emerald-950/30 text-emerald-900 hover:text-emerald-700'
+                }`}
+              >
+                {f.icon} {f.name}
+              </button>
+            ))}
+          </div>
+        )}
       </header>
 
       {/* Content */}
       <main className="px-4 py-5 sm:px-6 max-w-3xl mx-auto pb-24">
-        <p className="text-emerald-950 text-xs mb-4 font-semibold uppercase tracking-widest">
-          {filtered.length} entrada{filtered.length !== 1 ? 's' : ''} · cifradas
-        </p>
 
         {loading ? (
           <div className="flex items-center justify-center py-16 text-emerald-900">
             <ILoader className="w-7 h-7 animate-spin" />
           </div>
-        ) : filtered.length === 0 ? (
+        ) : entries.length === 0 ? (
           <div className="text-center py-16 text-emerald-950">
             <IKey className="w-12 h-12 mx-auto mb-3 opacity-30" />
-            <p className="text-sm">{search ? 'Sin resultados.' : 'La bóveda está vacía.'}</p>
-            {!search && (
-              <button
-                onClick={() => setModal('add')}
-                className="mt-4 px-5 py-2.5 rounded-xl bg-emerald-950/40 hover:bg-emerald-900/40 border border-emerald-900/30 text-emerald-700 font-bold text-sm transition-all"
-              >
-                Añadir primera entrada
-              </button>
-            )}
+            <p className="text-sm">La bóveda está vacía.</p>
+            <button onClick={() => setModal('add')}
+              className="mt-4 px-5 py-2.5 rounded-xl bg-emerald-950/40 hover:bg-emerald-900/40 border border-emerald-900/30 text-emerald-700 font-bold text-sm transition-all">
+              Añadir primera entrada
+            </button>
+          </div>
+        ) : showGrouped ? (
+          /* ── GROUPED VIEW ── */
+          <div className="space-y-6">
+            {grouped.map(({ folder, entries: gEntries }) => (
+              <div key={folder?.id ?? 'no-folder'}>
+                {/* Folder header */}
+                <div className="flex items-center justify-between mb-2 px-1">
+                  <div className="flex items-center gap-2">
+                    <span className="text-lg">{folder?.icon ?? '🔑'}</span>
+                    <span className="text-xs font-bold text-emerald-800 uppercase tracking-widest">
+                      {folder?.name ?? 'Sin carpeta'}
+                    </span>
+                    <span className="text-xs text-emerald-950">{gEntries.length}</span>
+                  </div>
+                  {folder && (
+                    <div className="flex gap-1">
+                      <button onClick={() => setFolderModal(folder)}
+                        className="p-1 text-emerald-950 hover:text-emerald-700 transition-colors" title="Editar">
+                        <IEdit className="w-3.5 h-3.5" />
+                      </button>
+                      <button onClick={() => handleDeleteFolder(folder.id)}
+                        className="p-1 text-emerald-950 hover:text-red-600 transition-colors" title="Eliminar carpeta">
+                        <ITrash className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  )}
+                </div>
+                {/* Entries in folder */}
+                <div className="space-y-2 pl-1 border-l border-emerald-900/20">
+                  {gEntries.map(entry => (
+                    <EntryCard key={entry.id} entry={entry} cryptoKey={cryptoKey}
+                      onEdit={e => setModal(e)} onDelete={handleDelete} />
+                  ))}
+                </div>
+              </div>
+            ))}
           </div>
         ) : (
+          /* ── FLAT / SEARCH VIEW ── */
           <div className="space-y-3">
-            {filtered.map(entry => (
-              <EntryCard
-                key={entry.id}
-                entry={entry}
-                cryptoKey={cryptoKey}
-                onEdit={e => setModal(e)}
-                onDelete={handleDelete}
-              />
+            {filtered.length === 0 ? (
+              <div className="text-center py-12 text-emerald-950">
+                <p className="text-sm">Sin resultados.</p>
+              </div>
+            ) : filtered.map(entry => (
+              <EntryCard key={entry.id} entry={entry} cryptoKey={cryptoKey}
+                onEdit={e => setModal(e)} onDelete={handleDelete} />
             ))}
           </div>
         )}
+
       </main>
 
       {/* FAB mobile */}
-      <button
-        type="button"
-        onClick={() => setModal('add')}
+      <button type="button" onClick={() => setModal('add')}
         className="fixed bottom-6 right-6 z-30 w-14 h-14 rounded-2xl bg-emerald-800 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-950/80 flex items-center justify-center transition-all active:scale-95 sm:hidden"
-        aria-label="Añadir contraseña"
-      >
+        aria-label="Añadir contraseña">
         <IPlus className="w-6 h-6" />
       </button>
 
-      {/* Modal */}
+      {/* Entry modal */}
       {modal && (
         <EntryModal
           entry={modal === 'add' ? null : modal}
           cryptoKey={cryptoKey}
           userId={user.id}
-          onSaved={() => { setModal(null); loadEntries(user.id) }}
+          folders={folders}
+          onSaved={() => { setModal(null); loadAll(user.id) }}
           onClose={() => setModal(null)}
+        />
+      )}
+
+      {/* Folder modal */}
+      {folderModal && (
+        <FolderModal
+          folder={folderModal === 'new' ? null : folderModal}
+          userId={user.id}
+          onSaved={() => { setFolderModal(null); loadAll(user.id) }}
+          onClose={() => setFolderModal(null)}
         />
       )}
     </div>
