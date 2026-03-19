@@ -486,7 +486,7 @@ export default function Calendars() {
         </button>
       </header>
 
-      <main className="p-3 sm:p-6 grid grid-cols-1 lg:grid-cols-[320px_1fr] gap-4 sm:gap-6">
+      <main className="p-3 sm:p-4 lg:p-6 grid grid-cols-1 lg:grid-cols-[300px_1fr] gap-4 lg:gap-6">
         {/* Sidebar */}
         <aside className="bg-slate-800 rounded-2xl border border-slate-700 shadow-lg p-4 transition-all duration-300 h-max order-2 lg:order-1">
           <h2 className="font-bold text-slate-200 mb-4">Mis calendarios</h2>
@@ -583,7 +583,7 @@ export default function Calendars() {
         </aside>
 
         {/* Main */}
-        <section className="bg-slate-800 rounded-2xl border border-slate-700 shadow-lg p-3 sm:p-4 transition-all duration-300 min-h-[70vh]">
+        <section className="bg-slate-800 rounded-2xl border border-slate-700 shadow-lg p-3 sm:p-4 transition-all duration-300 min-h-[70vh] order-1 lg:order-2">
           {showTrash ? (
             <div className="p-4">
               <h2 className="font-bold text-slate-200 mb-4 flex items-center gap-2">
@@ -635,7 +635,7 @@ export default function Calendars() {
               headerToolbar={{
                 left: 'prev,next',
                 center: 'title',
-                right: 'dayGridMonth,timeGridWeek',
+                right: 'dayGridMonth,timeGridWeek,timeGridDay',
               }}
               selectable
               selectMirror
@@ -680,14 +680,14 @@ export default function Calendars() {
       {/* Modal */}
       {modalOpen && modalEvent && (
         <div
-          className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 transition-all duration-300"
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-start sm:items-center justify-center z-50 p-4 overflow-y-auto transition-all duration-300"
           onClick={() => saveModalAndClose()}
           role="dialog"
           aria-modal="true"
           aria-label="Editar evento"
         >
           <div
-            className="bg-slate-800 rounded-t-3xl sm:rounded-2xl border border-slate-700 shadow-2xl w-full sm:max-w-2xl p-5 sm:p-6 transition-all duration-300"
+            className="bg-slate-800 rounded-t-3xl sm:rounded-2xl border border-slate-700 shadow-2xl w-full sm:max-w-2xl p-5 sm:p-6 transition-all duration-300 max-h-[90vh] overflow-y-auto my-auto"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-start justify-between gap-3 mb-5">

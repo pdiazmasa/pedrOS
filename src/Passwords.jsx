@@ -150,24 +150,103 @@ const inp = 'w-full px-4 py-3 rounded-xl bg-slate-900 border border-emerald-900/
 // ═══════════════════════════════════════════════════════════════
 function CopyBtn({ text }) {
   const [copied, setCopied] = useState(false)
-  function copy() {
-    navigator.clipboard.writeText(text).then(() => {
-      setCopied(true)
-      setTimeout(() => setCopied(false), 1500)
-    })
+
+  async function copy() {
+    if (!text) return
+    try {
+      // Primary: modern clipboard API
+      await navigator.clipboard.writeText(text)
+    } catch {
+      // Fallback for browsers/contexts that block clipboard API
+      const el = document.createElement('textarea')
+      el.value = text
+      el.style.cssText = 'position:fixed;top:-9999px;left:-9999px;opacity:0'
+      document.body.appendChild(el)
+      el.focus()
+      el.select()
+      document.execCommand('copy')
+      document.body.removeChild(el)
+    }
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
   }
+
   return (
     <button
       type="button"
       onClick={copy}
-      title="Copiar"
-      className={`p-2 rounded-lg transition-all flex-shrink-0 ${
+      title={copied ? '¡Copiado!' : 'Copiar'}
+      className={`p-2 rounded-lg transition-all duration-200 flex-shrink-0 ${
         copied
-          ? 'bg-emerald-500/20 text-emerald-400'
+          ? 'bg-emerald-500/25 text-emerald-400 scale-110'
           : 'bg-slate-700/50 hover:bg-slate-700 text-slate-500 hover:text-white'
       }`}
     >
-      <ICopy className="w-4 h-4" />
+      {copied
+        ? (
+          // Checkmark when copied
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+          </svg>
+        )
+        : <ICopy className="w-4 h-4" />
+      }
+    </button>
+  )
+}
+
+// ═══════════════════════════════════════════════════════════════
+// ASYNC COPY BUTTON (decrypts on demand before copying)
+// ═══════════════════════════════════════════════════════════════
+function AsyncCopyBtn({ getTextFn }) {
+  const [state, setState] = useState('idle') // idle | copying | done
+
+  async function copy() {
+    if (state !== 'idle') return
+    setState('copying')
+    try {
+      const text = await getTextFn()
+      if (!text) { setState('idle'); return }
+      try {
+        await navigator.clipboard.writeText(text)
+      } catch {
+        const el = document.createElement('textarea')
+        el.value = text
+        el.style.cssText = 'position:fixed;top:-9999px;left:-9999px;opacity:0'
+        document.body.appendChild(el)
+        el.focus(); el.select()
+        document.execCommand('copy')
+        document.body.removeChild(el)
+      }
+      setState('done')
+      setTimeout(() => setState('idle'), 2000)
+    } catch {
+      setState('idle')
+    }
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={copy}
+      title={state === 'done' ? '¡Copiado!' : 'Copiar'}
+      className={`p-2 rounded-lg transition-all duration-200 flex-shrink-0 ${
+        state === 'done'
+          ? 'bg-emerald-500/25 text-emerald-400 scale-110'
+          : 'bg-slate-700/50 hover:bg-slate-700 text-slate-500 hover:text-white'
+      }`}
+    >
+      {state === 'copying' ? (
+        <svg className="w-4 h-4 animate-spin" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4" />
+        </svg>
+      ) : state === 'done' ? (
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+        </svg>
+      ) : (
+        <ICopy className="w-4 h-4" />
+      )}
     </button>
   )
 }
@@ -213,7 +292,7 @@ function EntryCard({ entry, cryptoKey, onEdit, onDelete }) {
           </div>
           <p className="font-bold text-white text-base truncate">{entry.service}</p>
         </div>
-        <div className="flex gap-1 flex-shrink-0 opacity-0 group-hover:opacity-100 sm:transition-opacity">
+        <div className="flex gap-1 flex-shrink-0 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
           <button
             onClick={() => onEdit(entry)}
             className="p-1.5 rounded-lg text-slate-600 hover:text-yellow-400 hover:bg-yellow-500/10 transition-all"
@@ -239,7 +318,11 @@ function EntryCard({ entry, cryptoKey, onEdit, onDelete }) {
             <p className="text-slate-400 text-sm flex-1 truncate font-mono">
               {showPwd && plainEmail !== null ? plainEmail : '••••••••••@••••••'}
             </p>
-            <CopyBtn text={plainEmail ?? ''} />
+            <AsyncCopyBtn getTextFn={() =>
+              plainEmail !== null
+                ? Promise.resolve(plainEmail)
+                : decrypt(entry.email, cryptoKey).then(v => { setPlainEmail(v); return v ?? '' })
+            } />
           </div>
         </div>
       )}
@@ -558,6 +641,11 @@ function MasterGate({ userId, onUnlock }) {
 // ═══════════════════════════════════════════════════════════════
 // MAIN COMPONENT
 // ═══════════════════════════════════════════════════════════════
+// ── Check Web Crypto API availability ─────────────────────────
+if (typeof crypto === 'undefined' || !crypto.subtle) {
+  console.warn('[Bóveda 007] Web Crypto API no disponible. El cifrado no funcionará.')
+}
+
 export default function Passwords() {
   const navigate = useNavigate()
 
