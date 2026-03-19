@@ -9,6 +9,7 @@ import Calendars from './Calendars'
 import Passwords from './Passwords'
 import Finanzas from './Finanzas'
 import Chronopath from './Chronopath'
+import { PedritoGlobalWrapper } from './PedritoUI'
 import './App.css'
 
 export default function App() {
@@ -56,6 +57,9 @@ export default function App() {
         <Route path="/chronopath" element={<Chronopath />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
+
+      {/* Pedrito floating bubble — shown on all routes except / and /contraseñas */}
+      <PedritoGlobalWrapper />
     </BrowserRouter>
   )
 }
