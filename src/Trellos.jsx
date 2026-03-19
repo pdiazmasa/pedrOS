@@ -683,8 +683,9 @@ export default function Trellos() {
 
   return (
     <div className="min-h-screen bg-slate-900 text-white font-sans transition-all duration-300">
-      <header className="sticky top-0 z-20 bg-slate-900/95 backdrop-blur-sm border-b border-slate-700 px-3 py-2.5 sm:px-6 sm:py-3 flex items-center justify-between">
-        <div className="flex items-center gap-4">
+      <header className="sticky top-0 z-20 bg-slate-900/95 backdrop-blur-sm border-b border-slate-700 safe-top">
+        <div className="flex items-center justify-between px-4 py-3 sm:px-6">
+        <div className="flex items-center gap-3">
           <button
             type="button"
             onClick={() => {
@@ -692,10 +693,10 @@ export default function Trellos() {
               else navigate('/')
               setShowTrash(false)
             }}
-            className="text-slate-400 hover:text-white transition-colors duration-300 text-2xl"
+            className="text-slate-400 hover:text-white transition-colors duration-200 flex-shrink-0"
             aria-label="Volver"
           >
-            ←
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
           </button>
           <h1 className="text-xl font-black bg-gradient-to-r from-blue-400 to-indigo-500 bg-clip-text text-transparent">
             {activeBoard ? `${activeBoard.icon} ${activeBoard.title}` : 'Mis Trellos'}
@@ -732,6 +733,7 @@ export default function Trellos() {
           >
             🗑️ Papelera
           </button>
+        </div>
         </div>
       </header>
 

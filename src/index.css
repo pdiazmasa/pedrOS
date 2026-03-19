@@ -1,42 +1,28 @@
 @import "tailwindcss";
 
-/* ========== pedrOS — Tema global ========== */
-@layer base {
-  html {
-    scroll-behavior: smooth;
-  }
-
-  body {
-    @apply min-h-screen bg-slate-900 text-white font-sans antialiased;
-  }
-
-  /* Scrollbars oscuros */
-  * {
-    scrollbar-width: thin;
-    scrollbar-color: rgb(51 65 85) rgb(15 23 42);
-  }
-
-  *::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
-  }
-
-  *::-webkit-scrollbar-track {
-    @apply bg-slate-900;
-  }
-
-  *::-webkit-scrollbar-thumb {
-    @apply bg-slate-700 rounded-full;
-  }
-
-  *::-webkit-scrollbar-thumb:hover {
-    @apply bg-slate-600;
-  }
+/* ── Safe area insets (iPhone notch / Dynamic Island) ───────────
+   viewport-fit=cover lets the app go edge-to-edge.
+   These CSS variables expose the safe area values so components
+   can use them as padding without hard-coding pixel values.
+──────────────────────────────────────────────────────────────── */
+:root {
+  --sat: env(safe-area-inset-top, 0px);
+  --sar: env(safe-area-inset-right, 0px);
+  --sab: env(safe-area-inset-bottom, 0px);
+  --sal: env(safe-area-inset-left, 0px);
 }
 
-/* Utilidades para transiciones globales */
-@layer utilities {
-  .pedros-transition {
-    @apply transition-all duration-300;
-  }
+/* Sticky headers: push content below the notch */
+.safe-top {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
+/* Page-level wrappers that start at the top of the screen */
+.page-safe-top {
+  padding-top: max(1.5rem, env(safe-area-inset-top, 0px));
+}
+
+/* Bottom padding for FABs / navigation bars */
+.safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
 }

@@ -459,31 +459,33 @@ export default function Calendars() {
 
   return (
     <div className="min-h-screen bg-slate-900 text-white font-sans transition-all duration-300">
-      <header className="sticky top-0 z-20 bg-slate-900/95 backdrop-blur-sm border-b border-slate-700 px-4 py-3 sm:px-6 flex items-center justify-between">
-        <div className="flex items-center gap-4">
+      <header className="sticky top-0 z-20 bg-slate-900/95 backdrop-blur-sm border-b border-slate-700 safe-top">
+        <div className="flex items-center justify-between px-4 py-3 sm:px-6">
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => navigate('/')}
+              className="text-slate-400 hover:text-white transition-colors duration-200 flex-shrink-0"
+              aria-label="Volver"
+            >
+              <IconArrowLeft className="w-6 h-6" />
+            </button>
+            <h1 className="text-xl font-black bg-gradient-to-r from-blue-400 to-indigo-500 bg-clip-text text-transparent">
+              Calendarios
+            </h1>
+          </div>
           <button
             type="button"
-            onClick={() => navigate('/')}
-            className="text-slate-400 hover:text-white transition-colors duration-300 text-2xl"
-            aria-label="Volver"
+            onClick={() => setShowTrash((v) => !v)}
+            className={`px-4 py-2 rounded-lg text-sm font-bold transition-all duration-300 ${
+              showTrash
+                ? 'bg-red-500/20 text-red-400 border border-red-500/30'
+                : 'bg-slate-800 text-slate-300 hover:text-white border border-slate-700 hover:border-slate-500'
+            }`}
           >
-            <IconArrowLeft className="w-6 h-6" />
+            🗑️ Papelera
           </button>
-          <h1 className="text-xl font-black bg-gradient-to-r from-blue-400 to-indigo-500 bg-clip-text text-transparent">
-            Calendarios
-          </h1>
         </div>
-        <button
-          type="button"
-          onClick={() => setShowTrash((v) => !v)}
-          className={`px-4 py-2 rounded-lg text-sm font-bold transition-all duration-300 ${
-            showTrash
-              ? 'bg-red-500/20 text-red-400 border border-red-500/30'
-              : 'bg-slate-800 text-slate-300 hover:text-white border border-slate-700 hover:border-slate-500'
-          }`}
-        >
-          🗑️ Papelera
-        </button>
       </header>
 
       <main className="p-3 sm:p-4 lg:p-6 grid grid-cols-1 lg:grid-cols-[300px_1fr] gap-4 lg:gap-6">

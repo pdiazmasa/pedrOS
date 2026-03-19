@@ -619,7 +619,8 @@ function MasterGate({ userId, onUnlock }) {
       <button
         type="button"
         onClick={() => window.history.back()}
-        className="absolute top-4 left-4 flex items-center gap-1.5 text-emerald-900 hover:text-emerald-600 transition-colors text-sm font-semibold"
+        className="absolute left-4 flex items-center gap-1.5 text-emerald-900 hover:text-emerald-600 transition-colors text-sm font-semibold"
+        style={{ top: 'max(1rem, env(safe-area-inset-top, 1rem))' }}
         aria-label="Volver"
       >
         <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
@@ -887,8 +888,8 @@ export default function Passwords() {
     <div className="min-h-screen bg-black text-white font-mono selection:bg-emerald-700 selection:text-white">
 
       {/* Header */}
-      <header className="sticky top-0 z-20 bg-black/95 backdrop-blur-sm border-b border-emerald-900/30 px-4 py-3 sm:px-6">
-        <div className="flex items-center justify-between mb-3">
+      <header className="sticky top-0 z-20 bg-black/95 backdrop-blur-sm border-b border-emerald-900/30 safe-top">
+        <div className="flex items-center justify-between px-4 py-3 sm:px-6 mb-2">
           <button type="button" onClick={() => navigate('/')}
             className="text-emerald-900 hover:text-emerald-600 transition-colors" aria-label="Volver">
             <IArrow className="w-6 h-6" />
@@ -912,7 +913,7 @@ export default function Passwords() {
 
         {/* Search */}
         <input
-          className="w-full px-4 py-2.5 rounded-xl bg-emerald-950/20 border border-emerald-900/30 text-emerald-400 placeholder-emerald-950 focus:outline-none focus:border-emerald-800 transition-all text-sm"
+          className="w-full mx-4 sm:mx-6 w-[calc(100%-2rem)] sm:w-[calc(100%-3rem)] px-4 py-2.5 rounded-xl bg-emerald-950/20 border border-emerald-900/30 text-emerald-400 placeholder-emerald-950 focus:outline-none focus:border-emerald-800 transition-all text-sm"
           placeholder="Buscar servicio..."
           value={search}
           onChange={e => setSearch(e.target.value)}

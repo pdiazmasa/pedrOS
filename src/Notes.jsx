@@ -215,12 +215,12 @@ export default function Notes() {
 
   return (
     <div className="min-h-screen bg-slate-900 text-white font-sans pb-24 transition-all duration-300">
-      <header className="sticky top-0 z-20 bg-slate-900/95 backdrop-blur-sm border-b border-slate-700 px-4 py-3 sm:px-6">
-        <div className="flex items-center justify-between gap-4">
+      <header className="sticky top-0 z-20 bg-slate-900/95 backdrop-blur-sm border-b border-slate-700 safe-top">
+        <div className="flex items-center justify-between gap-4 px-4 py-3 sm:px-6">
           <button
             type="button"
             onClick={() => navigate('/')}
-            className="text-slate-400 hover:text-white transition-colors duration-300 text-2xl"
+            className="text-slate-400 hover:text-white transition-colors duration-200 flex-shrink-0"
             aria-label="Volver"
           >
             <IconArrowLeft className="w-6 h-6" />

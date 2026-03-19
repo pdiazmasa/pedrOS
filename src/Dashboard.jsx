@@ -62,11 +62,11 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-900 text-white font-sans px-4 py-6 sm:px-6 lg:px-8">
-      <header className="flex justify-between items-center mb-10 p-4 bg-slate-800 rounded-2xl border border-slate-700 shadow-lg transition-all duration-300">
+    <div className="min-h-screen bg-slate-900 text-white font-sans px-4 sm:px-6 lg:px-8" style={{ paddingTop: 'max(1.5rem, env(safe-area-inset-top, 1.5rem))', paddingBottom: '1.5rem' }}>
+      <header className="flex justify-between items-center mb-6 px-4 py-3 bg-slate-800 rounded-2xl border border-slate-700 shadow-lg transition-all duration-300">
         <h1 className="text-xl sm:text-2xl font-black tracking-tighter bg-gradient-to-r from-blue-400 to-indigo-500 bg-clip-text text-transparent leading-none select-none">
         pedrOS
-          <span className="text-xs font-normal text-slate-500 ml-1.5 tracking-normal">v2.6.5</span>
+          <span className="text-xs font-normal text-slate-500 ml-1.5 tracking-normal">v2.6.6</span>
         </h1>
         <button
           type="button"

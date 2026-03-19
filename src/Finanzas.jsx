@@ -1859,13 +1859,13 @@ export default function Finanzas() {
 
   return (
     <div className="min-h-screen bg-slate-900 text-white font-sans">
-      <div className="max-w-6xl mx-auto px-4 py-6 sm:px-6">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6" style={{ paddingTop: 'max(1.5rem, env(safe-area-inset-top, 0px))', paddingBottom: '1.5rem' }}>
 
-        <header className="flex items-center justify-between mb-4 sm:mb-6 p-3 sm:p-4 bg-slate-800 rounded-2xl border border-slate-700 shadow-lg">
+        <header className="flex items-center justify-between mb-4 sm:mb-6 px-4 py-3 sm:px-5 bg-slate-800 rounded-2xl border border-slate-700 shadow-lg">
           <button type="button" onClick={() => navigate('/')} className="text-slate-400 hover:text-white transition-colors" aria-label="Volver">
             <IArrowLeft className="w-6 h-6" />
           </button>
-          <h1 className="text-lg sm:text-2xl font-black bg-gradient-to-r from-yellow-400 to-amber-500 bg-clip-text text-transparent">
+          <h1 className="text-xl font-black bg-gradient-to-r from-yellow-400 to-amber-500 bg-clip-text text-transparent">
             📊 Finanzas ERP
           </h1>
           <div className="w-8" />
