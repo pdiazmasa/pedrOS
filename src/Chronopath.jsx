@@ -514,6 +514,16 @@ export default function Chronopath() {
         <FlyTo target={flyTarget} />
       </MapContainer>
 
+      {/* ── BACK BUTTON — top-left like all other modules ─────── */}
+      <button
+        onClick={() => navigate('/')}
+        className="absolute top-2 right-2 sm:top-4 sm:right-auto sm:left-4 z-[1001] flex items-center gap-1.5 bg-white/95 border border-gray-300 rounded-lg px-3 py-2 text-sm font-semibold text-gray-600 shadow hover:shadow-md hover:-translate-y-0.5 transition-all"
+        aria-label="Volver a pedrOS"
+      >
+        <IArrow className="w-4 h-4" />
+        <span className="hidden sm:inline">pedrOS</span>
+      </button>
+
       {/* ── TOP-RIGHT TOOLS ───────────────────────────────────── */}
       <div className="absolute bottom-4 right-4 sm:top-4 sm:bottom-auto z-[1000] flex gap-1.5 sm:gap-2">
         {[
@@ -524,11 +534,10 @@ export default function Chronopath() {
             onClick: () => saveToCloud(appState),
             extra: saveStatus==='saved' ? 'text-green-600 border-green-400' : saveStatus==='error' ? 'text-red-600 border-red-400' : ''
           },
-          { label: 'pedrOS', icon: <IArrow className="w-4 h-4" />, onClick: () => navigate('/') },
         ].map(({ label, icon, onClick, extra='' }) => (
           <button key={label} onClick={onClick}
-            className={`flex items-center gap-1.5 bg-white/95 border border-gray-300 rounded-lg px-3 py-2 text-sm font-semibold text-gray-600 shadow hover:shadow-md hover:-translate-y-0.5 transition-all ${extra}`}>
-            {icon} {label}
+            className={`flex items-center gap-1 sm:gap-1.5 bg-white/95 border border-gray-300 rounded-lg px-2.5 sm:px-3 py-2 text-sm font-semibold text-gray-600 shadow hover:shadow-md hover:-translate-y-0.5 transition-all ${extra}`}>
+            {icon} <span className="hidden sm:inline">{label}</span>
           </button>
         ))}
       </div>

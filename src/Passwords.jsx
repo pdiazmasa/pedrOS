@@ -597,7 +597,20 @@ function MasterGate({ userId, onUnlock }) {
   }
 
   return (
-    <div className="min-h-screen bg-black flex flex-col items-center justify-center px-4 font-mono">
+    <div className="min-h-screen bg-black flex flex-col items-center justify-center px-4 font-mono relative">
+      {/* Back to Dashboard — top-left like all other modules */}
+      <button
+        type="button"
+        onClick={() => window.history.back()}
+        className="absolute top-4 left-4 flex items-center gap-1.5 text-emerald-900 hover:text-emerald-600 transition-colors text-sm font-semibold"
+        aria-label="Volver"
+      >
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+        </svg>
+        <span className="hidden sm:inline font-mono tracking-wide">pedrOS</span>
+      </button>
+
       <div className="w-full max-w-sm">
         {/* Header */}
         <div className="text-center mb-8">
