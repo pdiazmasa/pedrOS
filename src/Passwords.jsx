@@ -18,20 +18,17 @@ import { supabase } from './supabaseClient'
 // ═══════════════════════════════════════════════════════════════
 // CRYPTO ENGINE (Web Crypto API — nativa del navegador, sin libs)
 // ═══════════════════════════════════════════════════════════════
+//
+// DISEÑO DE SEGURIDAD:
+//  · El salt se genera UNA VEZ y se guarda en Supabase (vault_master.salt).
+//  · Así el mismo salt se usa en local, en producción y en cualquier
+//    dispositivo — nunca más depende de localStorage.
+//  · El hash de verificación es SHA-256(salt + password) en Base64.
+//  · La clave AES se deriva con PBKDF2(password, salt, 310000 iter).
+//  · Nada de esto sale del navegador hacia Supabase salvo el hash y el salt.
+// ═══════════════════════════════════════════════════════════════
 
 const PBKDF2_ITERATIONS = 310_000
-const SALT_KEY = 'pedros_vault_salt' // localStorage key for the salt
-
-/** Genera o recupera un salt persistente en localStorage */
-function getOrCreateSalt() {
-  let salt = localStorage.getItem(SALT_KEY)
-  if (!salt) {
-    const bytes = crypto.getRandomValues(new Uint8Array(32))
-    salt = bufToB64(bytes)
-    localStorage.setItem(SALT_KEY, salt)
-  }
-  return b64ToBuf(salt)
-}
 
 /** Buffer ↔ Base64 helpers */
 function bufToB64(buf) {
@@ -42,16 +39,21 @@ function b64ToBuf(b64) {
   return Uint8Array.from(bin, c => c.charCodeAt(0))
 }
 
-/** Codifica texto a Uint8Array */
 const enc = new TextEncoder()
 const dec = new TextDecoder()
 
+/** Genera un nuevo salt aleatorio de 32 bytes (Base64) */
+function generateSalt() {
+  return bufToB64(crypto.getRandomValues(new Uint8Array(32)))
+}
+
 /**
- * Deriva una CryptoKey AES-256-GCM desde la contraseña maestra.
- * Usamos PBKDF2 con el salt persistente.
+ * Deriva una CryptoKey AES-256-GCM desde la contraseña maestra + salt.
+ * @param {string} masterPassword
+ * @param {string} saltB64 — salt en Base64, obtenido desde Supabase
  */
-async function deriveKey(masterPassword) {
-  const salt = getOrCreateSalt()
+async function deriveKey(masterPassword, saltB64) {
+  const salt = b64ToBuf(saltB64)
   const keyMaterial = await crypto.subtle.importKey(
     'raw', enc.encode(masterPassword), 'PBKDF2', false, ['deriveKey']
   )
@@ -80,46 +82,56 @@ async function encrypt(text, key) {
 
 /**
  * Descifra un string cifrado con encrypt().
- * Devuelve el texto original, o null si la clave es incorrecta.
+ * Si la clave es incorrecta o el texto es legacy (sin cifrar), devuelve el texto tal cual.
  */
 async function decrypt(ciphertext, key) {
   if (!ciphertext) return ''
   try {
-    // Encrypted format: "ivBase64:dataBase64" — contains exactly one ':'
-    // and both parts are valid base64
     if (ciphertext.includes(':')) {
       const [ivB64, dataB64] = ciphertext.split(':')
-      const iv   = b64ToBuf(ivB64)
-      const data = b64ToBuf(dataB64)
+      const iv    = b64ToBuf(ivB64)
+      const data  = b64ToBuf(dataB64)
       const plain = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, data)
       return dec.decode(plain)
     }
-    // Legacy: stored in plaintext (from old version without encryption)
-    return ciphertext
+    return ciphertext // legacy plaintext
   } catch {
-    // Decryption failed — might be plaintext stored by older version
-    return ciphertext
+    return ciphertext // fallback: return as-is
   }
 }
 
 /**
- * Genera el hash de verificación de la contraseña maestra.
- * SHA-256(salt + password) — no es la clave, solo para verificar el acceso.
+ * Genera el hash de verificación.
+ * SHA-256(salt_bytes + password_bytes) → Base64
  */
-async function hashForVerification(masterPassword) {
-  const salt = getOrCreateSalt()
+async function hashForVerification(masterPassword, saltB64) {
+  const salt = b64ToBuf(saltB64)
   const data = new Uint8Array([...salt, ...enc.encode(masterPassword)])
   const hash = await crypto.subtle.digest('SHA-256', data)
   return bufToB64(hash)
 }
 
 /**
- * Hash legacy (versión anterior): SHA-256(password) en hexadecimal.
- * Solo se usa para detectar y migrar hashes antiguos.
+ * Hash legacy v1: SHA-256(password) en hexadecimal.
+ * Solo para migrar usuarios que crearon la bóveda antes de esta versión.
  */
 async function hashLegacy(masterPassword) {
   const buf = await crypto.subtle.digest('SHA-256', enc.encode(masterPassword))
   return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('')
+}
+
+/**
+ * Hash legacy v2: SHA-256(localStorage_salt + password) en Base64.
+ * Para migrar usuarios que usaron el salt de localStorage.
+ * Solo funciona si el salt todavía está en localStorage del mismo navegador.
+ */
+async function hashLegacyLocalStorage(masterPassword) {
+  const stored = localStorage.getItem('pedros_vault_salt')
+  if (!stored) return null
+  const salt = b64ToBuf(stored)
+  const data = new Uint8Array([...salt, ...enc.encode(masterPassword)])
+  const hash = await crypto.subtle.digest('SHA-256', data)
+  return bufToB64(hash)
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -506,7 +518,7 @@ function MasterGate({ userId, onUnlock }) {
   const [loading,        setLoading]        = useState(false)
 
   useEffect(() => {
-    supabase.from('vault_master').select('hash').eq('user_id', userId).single()
+    supabase.from('vault_master').select('hash, salt').eq('user_id', userId).single()
       .then(({ data }) => setHasMaster(!!data))
   }, [userId])
 
@@ -515,24 +527,44 @@ function MasterGate({ userId, onUnlock }) {
     if (!masterInput) return setError('Introduce la contraseña maestra.')
     setLoading(true); setError('')
 
-    const { data } = await supabase.from('vault_master').select('hash').eq('user_id', userId).single()
+    const { data } = await supabase
+      .from('vault_master').select('hash, salt').eq('user_id', userId).single()
     const storedHash = data?.hash
+    const storedSalt = data?.salt  // null si es una fila antigua sin salt
 
-    // Try new salted hash first
-    const newHash = await hashForVerification(masterInput)
-    if (newHash === storedHash) {
-      const key = await deriveKey(masterInput)
+    // ── CASO 1: salt ya está en Supabase (versión actual) ──────────────
+    if (storedSalt) {
+      const hash = await hashForVerification(masterInput, storedSalt)
+      if (hash === storedHash) {
+        const key = await deriveKey(masterInput, storedSalt)
+        onUnlock(key)
+        return
+      }
+      // Hash no coincide con el salt de Supabase → intentar migración legacy
+    }
+
+    // ── CASO 2: legacy v2 — salt estaba en localStorage ───────────────
+    // (solo funciona en el mismo navegador donde se creó la bóveda)
+    const legacyLSHash = await hashLegacyLocalStorage(masterInput)
+    if (legacyLSHash && legacyLSHash === storedHash) {
+      // Contraseña correcta: migrar salt a Supabase
+      const lsSalt = localStorage.getItem('pedros_vault_salt')
+      await supabase.from('vault_master')
+        .upsert({ user_id: userId, hash: storedHash, salt: lsSalt }, { onConflict: 'user_id' })
+      const key = await deriveKey(masterInput, lsSalt)
       onUnlock(key)
       return
     }
 
-    // Try legacy hash (plain SHA-256 hex, from previous version)
-    const legacyHash = await hashLegacy(masterInput)
-    if (legacyHash === storedHash) {
-      // Password is correct — migrate hash to new format silently
+    // ── CASO 3: legacy v1 — hash plano SHA-256 hex sin salt ───────────
+    const legacyHexHash = await hashLegacy(masterInput)
+    if (legacyHexHash === storedHash) {
+      // Contraseña correcta: generar nuevo salt y migrar todo a Supabase
+      const newSalt = generateSalt()
+      const newHash = await hashForVerification(masterInput, newSalt)
       await supabase.from('vault_master')
-        .upsert({ user_id: userId, hash: newHash }, { onConflict: 'user_id' })
-      const key = await deriveKey(masterInput)
+        .upsert({ user_id: userId, hash: newHash, salt: newSalt }, { onConflict: 'user_id' })
+      const key = await deriveKey(masterInput, newSalt)
       onUnlock(key)
       return
     }
@@ -543,14 +575,16 @@ function MasterGate({ userId, onUnlock }) {
 
   async function handleSetup(e) {
     e.preventDefault()
-    if (masterInput.length < 4)          return setError('Mínimo 4 caracteres.')
-    if (masterInput !== masterConfirm)    return setError('Las contraseñas no coinciden.')
+    if (masterInput.length < 4)       return setError('Mínimo 4 caracteres.')
+    if (masterInput !== masterConfirm) return setError('Las contraseñas no coinciden.')
     setLoading(true); setError('')
-    const hash = await hashForVerification(masterInput)
+    // Generar salt aleatorio y guardarlo en Supabase junto al hash
+    const salt = generateSalt()
+    const hash = await hashForVerification(masterInput, salt)
     const { error: err } = await supabase.from('vault_master')
-      .upsert({ user_id: userId, hash }, { onConflict: 'user_id' })
+      .upsert({ user_id: userId, hash, salt }, { onConflict: 'user_id' })
     if (err) { setError(err.message); setLoading(false); return }
-    const key = await deriveKey(masterInput)
+    const key = await deriveKey(masterInput, salt)
     onUnlock(key)
   }
 
@@ -631,8 +665,36 @@ function MasterGate({ userId, onUnlock }) {
         {/* Security info */}
         <div className="mt-6 flex items-start gap-2 text-xs text-emerald-950">
           <IShield className="w-3.5 h-3.5 text-emerald-900 flex-shrink-0 mt-0.5" />
-          <span>Cifrado AES-256-GCM con PBKDF2 ({PBKDF2_ITERATIONS.toLocaleString()} iteraciones). La clave nunca sale de este dispositivo.</span>
+          <span>Cifrado AES-256-GCM con PBKDF2 ({PBKDF2_ITERATIONS.toLocaleString()} iteraciones). Salt almacenado en Supabase.</span>
         </div>
+
+        {/* Reset vault — for migration/locked out users */}
+        {hasMaster && (
+          <details className="mt-4">
+            <summary className="text-xs text-emerald-950/60 hover:text-emerald-900 cursor-pointer text-center select-none">
+              ¿No puedes acceder?
+            </summary>
+            <div className="mt-3 p-3 bg-red-950/20 border border-red-900/30 rounded-xl space-y-2">
+              <p className="text-xs text-red-900 leading-relaxed">
+                Si perdiste el acceso por cambio de entorno (local → web), puedes resetear la bóveda.
+                <strong className="text-red-700"> Esto borrará todas las contraseñas guardadas.</strong>
+              </p>
+              <button
+                type="button"
+                onClick={async () => {
+                  if (!window.confirm('¿Borrar TODA la bóveda? Esta acción no se puede deshacer.')) return
+                  await supabase.from('vault_entries').delete().eq('user_id', userId)
+                  await supabase.from('vault_master').delete().eq('user_id', userId)
+                  localStorage.removeItem('pedros_vault_salt')
+                  window.location.reload()
+                }}
+                className="w-full py-2 rounded-lg bg-red-900/30 hover:bg-red-900/50 text-red-500 border border-red-900/40 text-xs font-bold uppercase tracking-widest transition-all"
+              >
+                ⚠ Resetear bóveda
+              </button>
+            </div>
+          </details>
+        )}
       </div>
     </div>
   )
