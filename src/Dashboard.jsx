@@ -29,6 +29,14 @@ const MODULES = [
     hoverShadow: 'hover:shadow-[0_0_20px_rgba(168,85,247,0.2)]',
   },
   {
+    emoji: '👥',
+    title: 'Contactos',
+    subtitle: 'Agenda y relaciones',
+    path: '/contactos',
+    hoverBorder: 'hover:border-teal-500',
+    hoverShadow: 'hover:shadow-[0_0_20px_rgba(20,184,166,0.2)]',
+  },
+  {
     emoji: '📈',
     title: 'Finanzas',
     subtitle: 'Inversiones y control',
@@ -43,6 +51,14 @@ const MODULES = [
     path: '/chronopath',
     hoverBorder: 'hover:border-orange-500',
     hoverShadow: 'hover:shadow-[0_0_20px_rgba(249,115,22,0.2)]',
+  },
+  {
+    emoji: '🎬',
+    title: 'Películas',
+    subtitle: 'Películas y series',
+    path: '/peliculas',
+    hoverBorder: 'hover:border-rose-500',
+    hoverShadow: 'hover:shadow-[0_0_20px_rgba(244,63,94,0.2)]',
   },
   {
     emoji: '🔐',
@@ -66,8 +82,8 @@ export default function Dashboard() {
     <div className="min-h-screen bg-slate-900 text-white font-sans px-4 py-6 sm:px-6 lg:px-8">
       <header className="flex justify-between items-center mb-10 p-4 bg-slate-800 rounded-2xl border border-slate-700 shadow-lg transition-all duration-300">
         <h1 className="text-xl sm:text-2xl font-black tracking-tighter bg-gradient-to-r from-blue-400 to-indigo-500 bg-clip-text text-transparent leading-none select-none">
-        pedrOS
-          <span className="text-xs font-normal text-slate-500 ml-1.5 tracking-normal">v2.7.1</span>
+          pedrOS
+          <span className="text-xs font-normal text-slate-500 ml-1.5 tracking-normal">v2.8.0</span>
         </h1>
         <button
           type="button"

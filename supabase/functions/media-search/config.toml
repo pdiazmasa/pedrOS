@@ -1,0 +1,10 @@
+# supabase/functions/media-search/config.toml
+#
+# Sin verify_jwt = false, Supabase devuelve 401 si el JWT de sesión
+# ha expirado o no se pasa correctamente — ANTES de que tu código se ejecute.
+# El 401 que ves en los logs viene de aquí, no del código.
+#
+# La seguridad real la da el RLS de la tabla media_items (user_id).
+# Esta función solo llama a TMDb — no expone datos privados.
+[functions.media-search]
+verify_jwt = false

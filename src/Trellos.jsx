@@ -204,6 +204,35 @@ export default function Trellos() {
   }, [user])
 
   useEffect(() => {
+    async function handlePedritoRefresh(event) {
+      const targets = event.detail?.targets ?? event.detail?.modules ?? []
+      if (!user) return
+
+      const shouldRefresh =
+        targets.includes('all') ||
+        targets.includes('trello') ||
+        targets.includes('trellos') ||
+        targets.includes('boards') ||
+        targets.includes('cards') ||
+        targets.includes('calendar') ||
+        targets.includes('events')
+
+      if (!shouldRefresh) return
+
+      await fetchBoards()
+
+      if (activeBoard?.id) {
+        await fetchBoardContent(activeBoard.id)
+        await fetchCalendars()
+        await fetchCardEventsForBoard(activeBoard.id)
+      }
+    }
+
+    window.addEventListener('pedrito:refresh', handlePedritoRefresh)
+    return () => window.removeEventListener('pedrito:refresh', handlePedritoRefresh)
+  }, [user, activeBoard, cards.length])
+
+  useEffect(() => {
     if (!user) return
     if (!activeBoard) return
     fetchBoardContent(activeBoard.id)

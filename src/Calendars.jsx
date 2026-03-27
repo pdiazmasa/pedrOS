@@ -41,6 +41,32 @@ const VIEW_LABELS = {
   timeGridDay: 'Día',
 }
 
+async function ensureBirthdayCalendar(userId) {
+  const { data: existing, error: existingError } = await supabase
+    .from('calendars')
+    .select('id,name,color,is_default,created_at')
+    .eq('user_id', userId)
+    .ilike('name', 'cumpleaños')
+    .limit(1)
+
+  if (existingError) throw existingError
+  if (existing?.length) return existing[0]
+
+  const { data: created, error: createdError } = await supabase
+    .from('calendars')
+    .insert({
+      user_id: userId,
+      name: 'Cumpleaños',
+      color: '#e67c73',
+      is_default: false,
+    })
+    .select('id,name,color,is_default,created_at')
+    .single()
+
+  if (createdError) throw createdError
+  return created
+}
+
 function cx(...classes) {
   return classes.filter(Boolean).join(' ')
 }
@@ -815,6 +841,8 @@ export default function Calendars() {
     if (!authUser) return
     setLoading(true)
     try {
+      await ensureBirthdayCalendar(authUser.id)
+
       const { data: calendarsData, error: calendarsError } = await supabase
         .from('calendars')
         .select('*')
@@ -858,6 +886,25 @@ export default function Calendars() {
   useEffect(() => {
     if (!user) return
     fetchAll(user)
+  }, [user, fetchAll])
+
+  useEffect(() => {
+    function handlePedritoRefresh(event) {
+      const targets = event.detail?.targets ?? event.detail?.modules ?? []
+      if (!user) return
+
+      const shouldRefresh =
+        targets.includes('all') ||
+        targets.includes('calendar') ||
+        targets.includes('calendars') ||
+        targets.includes('events')
+
+      if (!shouldRefresh) return
+      fetchAll(user)
+    }
+
+    window.addEventListener('pedrito:refresh', handlePedritoRefresh)
+    return () => window.removeEventListener('pedrito:refresh', handlePedritoRefresh)
   }, [user, fetchAll])
 
   useEffect(() => {

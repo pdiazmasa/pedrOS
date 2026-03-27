@@ -9,6 +9,8 @@ import Calendars from './Calendars'
 import Passwords from './Passwords'
 import Finanzas from './Finanzas'
 import Chronopath from './Chronopath'
+import Contacts from './Contacts'
+import Movies from './Movies'
 import { PedritoGlobalWrapper } from './PedritoUI'
 import './App.css'
 
@@ -55,6 +57,8 @@ export default function App() {
         <Route path="/contraseñas" element={<Passwords />} />
         <Route path="/finanzas" element={<Finanzas />} />
         <Route path="/chronopath" element={<Chronopath />} />
+        <Route path="/contactos" element={<Contacts />} />
+        <Route path="/peliculas" element={<Movies />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
 
