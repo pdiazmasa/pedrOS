@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { supabase } from './supabaseClient'
@@ -11,6 +12,7 @@ import Finanzas from './Finanzas'
 import Chronopath from './Chronopath'
 import Contacts from './Contacts'
 import Movies from './Movies'
+import Gym from './Gym'
 import { PedritoGlobalWrapper } from './PedritoUI'
 import './App.css'
 
@@ -59,10 +61,10 @@ export default function App() {
         <Route path="/chronopath" element={<Chronopath />} />
         <Route path="/contactos" element={<Contacts />} />
         <Route path="/peliculas" element={<Movies />} />
+        <Route path="/gimnasio" element={<Gym />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
 
-      {/* Pedrito floating bubble — shown on all routes except / and /contraseñas */}
       <PedritoGlobalWrapper />
     </BrowserRouter>
   )
