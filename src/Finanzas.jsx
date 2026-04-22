@@ -263,7 +263,9 @@ function sumByCategoryNet(transactions, yearMonth = '') {
 // INVESTMENT DATA LOGIC
 // ═══════════════════════════════════════════════════════════════
 
-/** Calcula estado actual de cada inversión desde sus movimientos */
+/** Calcula estado actual de cada inversión desde sus movimientos.
+ *  Si hay snapshots con total_aportado, ese valor tiene prioridad
+ *  sobre la suma de aportaciones individuales. */
 function computeCurrentState(investments, movements) {
   const state = {}
   for (const inv of investments) state[inv.id] = { totalValue: 0, totalInvested: 0 }
@@ -273,6 +275,10 @@ function computeCurrentState(investments, movements) {
     const s = state[mv.investment_id]
     if (mv.type === 'aportacion') s.totalInvested += Number(mv.amount)
     if (mv.type === 'retiro')     s.totalInvested -= Number(mv.amount)
+    // Snapshot con total_aportado sobreescribe el acumulado calculado
+    if (mv.type === 'actualizacion_valor' && mv.total_aportado != null) {
+      s.totalInvested = Number(mv.total_aportado)
+    }
     s.totalValue = Number(mv.new_total_value)
   }
   return state
@@ -301,9 +307,19 @@ function formatChartData(investments, movements) {
     for (const inv of investments) {
       const rel = byInv[inv.id].filter((mv) => mv.date.slice(0, 7) <= month)
       pt[inv.id] = rel.length ? Number(rel[rel.length - 1].new_total_value) : 0
-      for (const mv of rel) {
-        if (mv.type === 'aportacion') invested += Number(mv.amount)
-        else if (mv.type === 'retiro') invested -= Number(mv.amount)
+
+      // Para calcular el total invertido en este mes:
+      // 1) Buscar el snapshot más reciente con total_aportado hasta este mes
+      const snapshots = rel.filter(mv => mv.type === 'actualizacion_valor' && mv.total_aportado != null)
+      if (snapshots.length > 0) {
+        // El último snapshot con total_aportado es la fuente de verdad
+        invested += Number(snapshots[snapshots.length - 1].total_aportado)
+      } else {
+        // Fallback: sumar aportaciones/retiros individuales
+        for (const mv of rel) {
+          if (mv.type === 'aportacion') invested += Number(mv.amount)
+          else if (mv.type === 'retiro') invested -= Number(mv.amount)
+        }
       }
     }
     pt.__invested = invested
@@ -813,7 +829,7 @@ function CsvImportModal({ investments, userId, onImported, onClose }) {
 // ═══════════════════════════════════════════════════════════════
 // MOVEMENT MODAL (Investments)
 // ═══════════════════════════════════════════════════════════════
-const EMPTY_MV = { investment_id: '', date: new Date().toISOString().slice(0, 10), type: 'aportacion', amount: '', new_total_value: '', newInvName: '', newInvColor: DEFAULT_COLORS[0], createNew: false }
+const EMPTY_MV = { investment_id: '', date: new Date().toISOString().slice(0, 10), type: 'aportacion', amount: '', new_total_value: '', total_aportado: '', newInvName: '', newInvColor: DEFAULT_COLORS[0], createNew: false }
 
 const MOV_LABELS = {
   aportacion:          { label: 'Aportación',     color: 'text-emerald-400', bg: 'bg-emerald-500/10 border-emerald-500/20' },
@@ -824,7 +840,7 @@ const MOV_LABELS = {
 function MovementModal({ movement, investments, userId, onSaved, onClose }) {
   const isEdit = !!movement
   const [form, setForm] = useState(isEdit
-    ? { ...EMPTY_MV, investment_id: movement.investment_id, date: movement.date, type: movement.type, amount: String(movement.amount), new_total_value: String(movement.new_total_value) }
+    ? { ...EMPTY_MV, investment_id: movement.investment_id, date: movement.date, type: movement.type, amount: String(movement.amount), new_total_value: String(movement.new_total_value), total_aportado: movement.total_aportado != null ? String(movement.total_aportado) : '' }
     : { ...EMPTY_MV, investment_id: investments[0]?.id ?? '' })
   const [saving, setSaving] = useState(false)
   const [err, setErr] = useState('')
@@ -834,9 +850,12 @@ function MovementModal({ movement, investments, userId, onSaved, onClose }) {
     setErr('')
     const amount = form.type === 'actualizacion_valor' ? 0 : parseFloat(form.amount)
     const ntv    = parseFloat(form.new_total_value)
+    // total_aportado: solo obligatorio en actualizacion_valor
+    const totalAportado = form.type === 'actualizacion_valor' ? parseFloat(form.total_aportado) : null
     if (!form.date) return setErr('Fecha requerida.')
     if (form.type !== 'actualizacion_valor' && (isNaN(amount) || amount <= 0)) return setErr('Importe inválido.')
     if (isNaN(ntv) || ntv < 0) return setErr('Valor de mercado inválido.')
+    if (form.type === 'actualizacion_valor' && (isNaN(totalAportado) || totalAportado < 0)) return setErr('Total aportado inválido.')
     setSaving(true)
     try {
       let investment_id = form.investment_id
@@ -848,7 +867,11 @@ function MovementModal({ movement, investments, userId, onSaved, onClose }) {
         investment_id = data.id
       }
       if (!investment_id) { setErr('Selecciona una inversión.'); setSaving(false); return }
-      const payload = { user_id: userId, investment_id, date: form.date, type: form.type, amount: amount || 0, new_total_value: ntv }
+      const payload = {
+        user_id: userId, investment_id, date: form.date, type: form.type,
+        amount: amount || 0, new_total_value: ntv,
+        total_aportado: form.type === 'actualizacion_valor' ? totalAportado : null,
+      }
       const { error: e } = isEdit
         ? await supabase.from('finance_movements').update(payload).eq('id', movement.id)
         : await supabase.from('finance_movements').insert(payload)
@@ -899,8 +922,15 @@ function MovementModal({ movement, investments, userId, onSaved, onClose }) {
             <input className={inputCls} type="number" min="0.01" step="0.01" placeholder="500.00" value={form.amount} onChange={(e) => set('amount', e.target.value)} />
           </FF>
         )}
-        <FF label="Valor total de mercado (€)">
+        {form.type === 'actualizacion_valor' && (
+          <FF label="Total aportado acumulado (€)">
+            <input className={inputCls} type="number" min="0" step="0.01" placeholder="5000.00" value={form.total_aportado} onChange={(e) => set('total_aportado', e.target.value)} />
+            <p className="text-xs text-slate-500 mt-1">Introduce el total que has aportado hasta ahora, incluyendo esta fecha.</p>
+          </FF>
+        )}
+        <FF label="Valor actual de mercado (€)">
           <input className={inputCls} type="number" min="0" step="0.01" placeholder="1250.00" value={form.new_total_value} onChange={(e) => set('new_total_value', e.target.value)} />
+          <p className="text-xs text-slate-500 mt-1">Lo que vale ahora tu fondo/inversión.</p>
         </FF>
         <ErrMsg msg={err} />
         <div className="flex gap-3 pt-1">
@@ -1082,7 +1112,8 @@ function InvestmentsTab({ investments, movements, userId, onRefresh }) {
                     <div className="flex items-center gap-3 mt-0.5 text-xs text-slate-500">
                       <span>{mv.date}</span>
                       {mv.type !== 'actualizacion_valor' && <span className={mv.type === 'aportacion' ? 'text-emerald-400' : 'text-red-400'}>{mv.type === 'aportacion' ? '+' : '-'}{fmt(mv.amount)}</span>}
-                      <span>→ {fmt(mv.new_total_value)}</span>
+                      {mv.type === 'actualizacion_valor' && mv.total_aportado != null && <span className="text-slate-400">Aportado: {fmt(mv.total_aportado)}</span>}
+                      <span>→ Valor: {fmt(mv.new_total_value)}</span>
                     </div>
                   </div>
                   <div className="flex gap-1">
