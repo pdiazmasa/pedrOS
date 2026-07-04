@@ -155,7 +155,43 @@ function TimelineContent({ appState, iso3to2, onDelete }) {
   const byYear = {}
   display.forEach((t) => { if(!byYear[t.year]) byYear[t.year]=[]; byYear[t.year].push(t) })
 
+  function exportCSV() {
+    const rows = [['Año','Mes','País']]
+    chronoTrips.forEach((t) => rows.push([t.year, MONTHS_FULL[t.month-1], t.name]))
+    const csv = rows.map(r => r.map(v => `"${v}"`).join(',')).join('\n')
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
+    const url  = URL.createObjectURL(blob)
+    const a    = document.createElement('a')
+    a.href=url; a.download='cronologia_viajes.csv'
+    document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url)
+  }
+
+  function exportMarkdown() {
+    let md = '# Cronología de Viajes\n\n'
+    Object.keys(byYear).sort((a,b)=>b-a).forEach((year) => {
+      md += `## ${year}\n\n`
+      byYear[year].forEach((t) => { md += `- **${t.name}** — ${MONTHS_FULL[t.month-1]}\n` })
+      md += '\n'
+    })
+    const blob = new Blob([md], { type: 'text/markdown;charset=utf-8;' })
+    const url  = URL.createObjectURL(blob)
+    const a    = document.createElement('a')
+    a.href=url; a.download='cronologia_viajes.md'
+    document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url)
+  }
+
   return (
+    <div>
+      <div className="flex gap-2 mb-6">
+        <button onClick={exportCSV}
+          className="flex-1 flex items-center justify-center gap-1.5 bg-gray-800 hover:bg-gray-700 text-gray-200 border border-gray-600 font-semibold text-xs py-2 rounded-lg transition-all uppercase tracking-wide">
+          ⬇ CSV
+        </button>
+        <button onClick={exportMarkdown}
+          className="flex-1 flex items-center justify-center gap-1.5 bg-gray-800 hover:bg-gray-700 text-gray-200 border border-gray-600 font-semibold text-xs py-2 rounded-lg transition-all uppercase tracking-wide">
+          ⬇ Markdown
+        </button>
+      </div>
     <div className="relative pl-8 pb-20">
       <div className="absolute top-4 bottom-0 left-[6px] w-0.5 bg-gray-700" />
       {Object.keys(byYear).sort((a,b)=>b-a).map((year) => (
@@ -180,6 +216,7 @@ function TimelineContent({ appState, iso3to2, onDelete }) {
           })}
         </div>
       ))}
+    </div>
     </div>
   )
 }
