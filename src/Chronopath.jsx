@@ -155,41 +155,89 @@ function TimelineContent({ appState, iso3to2, onDelete }) {
   const byYear = {}
   display.forEach((t) => { if(!byYear[t.year]) byYear[t.year]=[]; byYear[t.year].push(t) })
 
-  function exportCSV() {
-    const rows = [['Año','Mes','País']]
-    chronoTrips.forEach((t) => rows.push([t.year, MONTHS_FULL[t.month-1], t.name]))
-    const csv = rows.map(r => r.map(v => `"${v}"`).join(',')).join('\n')
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
-    const url  = URL.createObjectURL(blob)
-    const a    = document.createElement('a')
-    a.href=url; a.download='cronologia_viajes.csv'
-    document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url)
-  }
+  function exportPDF() {
+    const years = Object.keys(byYear).sort((a,b) => b-a)
+    const totalTrips = trips.length
+    const totalCountries = new Set(trips.map(t => t.id)).size
 
-  function exportMarkdown() {
-    let md = '# Cronología de Viajes\n\n'
-    Object.keys(byYear).sort((a,b)=>b-a).forEach((year) => {
-      md += `## ${year}\n\n`
-      byYear[year].forEach((t) => { md += `- **${t.name}** — ${MONTHS_FULL[t.month-1]}\n` })
-      md += '\n'
-    })
-    const blob = new Blob([md], { type: 'text/markdown;charset=utf-8;' })
-    const url  = URL.createObjectURL(blob)
-    const a    = document.createElement('a')
-    a.href=url; a.download='cronologia_viajes.md'
-    document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url)
+    const tripsHTML = years.map(year => {
+      const entries = byYear[year].map(t => {
+        const iso2 = iso3to2[t.id] || 'xx'
+        const repeat = t.visitOrder > 1 ? `<span class="repeat">(${t.visitOrder}ª vez)</span>` : ''
+        return `
+          <div class="trip-entry">
+            <div class="dot"></div>
+            <div class="trip-body">
+              <img class="flag" src="https://flagcdn.com/24x18/${iso2}.png" onerror="this.style.display='none'" />
+              <span class="country">${t.name}</span>${repeat}
+              <span class="date">✈ ${MONTHS_FULL[t.month-1]} ${t.year}</span>
+            </div>
+          </div>`
+      }).join('')
+      return `<div class="year-block"><h2 class="year-label">${year}</h2>${entries}</div>`
+    }).join('')
+
+    const html = `<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<title>Cronología de Viajes</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap');
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'Inter',sans-serif; background:#fff; color:#1a1a2e; padding:48px 56px; }
+  .header { border-bottom:3px solid #4f46e5; padding-bottom:24px; margin-bottom:36px; }
+  .header h1 { font-size:32px; font-weight:900; letter-spacing:-1px; color:#4f46e5; }
+  .header p { font-size:13px; color:#6b7280; margin-top:6px; }
+  .stats { display:flex; gap:32px; margin-top:16px; }
+  .stat { text-align:center; }
+  .stat .num { font-size:28px; font-weight:900; color:#4f46e5; }
+  .stat .lbl { font-size:11px; color:#9ca3af; text-transform:uppercase; letter-spacing:.05em; }
+  .timeline { position:relative; padding-left:28px; }
+  .timeline::before { content:''; position:absolute; left:6px; top:8px; bottom:0; width:2px; background:#e5e7eb; }
+  .year-block { margin-bottom:32px; }
+  .year-label { font-size:22px; font-weight:900; color:#9ca3af; margin-bottom:16px; margin-left:-20px; }
+  .trip-entry { position:relative; margin-bottom:18px; padding-left:20px; }
+  .dot { position:absolute; left:-22px; top:4px; width:10px; height:10px; background:#facc15; border-radius:50%; border:2px solid #fff; box-shadow:0 0 0 2px #4f46e5; }
+  .trip-body { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+  .flag { height:14px; border-radius:2px; }
+  .country { font-size:15px; font-weight:700; color:#1a1a2e; }
+  .repeat { font-size:12px; color:#9ca3af; }
+  .date { font-size:12px; color:#6b7280; margin-left:auto; }
+  .footer { margin-top:48px; padding-top:16px; border-top:1px solid #f3f4f6; font-size:11px; color:#d1d5db; text-align:center; }
+  @media print {
+    body { padding:32px 40px; }
+    @page { margin:1.2cm; size:A4; }
+  }
+</style>
+</head>
+<body>
+  <div class="header">
+    <h1>🌍 Cronología de Viajes</h1>
+    <p>Generado desde pedrOS · ${new Date().toLocaleDateString('es-ES', { year:'numeric', month:'long', day:'numeric' })}</p>
+    <div class="stats">
+      <div class="stat"><div class="num">${totalTrips}</div><div class="lbl">Viajes</div></div>
+      <div class="stat"><div class="num">${totalCountries}</div><div class="lbl">Países</div></div>
+      <div class="stat"><div class="num">${years.length}</div><div class="lbl">Años</div></div>
+    </div>
+  </div>
+  <div class="timeline">${tripsHTML}</div>
+  <div class="footer">pedrOS v2.13.1 — Chronopath</div>
+</body>
+</html>`
+
+    const win = window.open('', '_blank')
+    win.document.write(html)
+    win.document.close()
+    win.onload = () => { win.focus(); win.print() }
   }
 
   return (
     <div>
       <div className="flex gap-2 mb-6">
-        <button onClick={exportCSV}
-          className="flex-1 flex items-center justify-center gap-1.5 bg-gray-800 hover:bg-gray-700 text-gray-200 border border-gray-600 font-semibold text-xs py-2 rounded-lg transition-all uppercase tracking-wide">
-          ⬇ CSV
-        </button>
-        <button onClick={exportMarkdown}
-          className="flex-1 flex items-center justify-center gap-1.5 bg-gray-800 hover:bg-gray-700 text-gray-200 border border-gray-600 font-semibold text-xs py-2 rounded-lg transition-all uppercase tracking-wide">
-          ⬇ Markdown
+        <button onClick={exportPDF}
+          className="w-full flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white border border-indigo-500 font-semibold text-sm py-2.5 rounded-lg transition-all uppercase tracking-wide">
+          ⬇ Exportar PDF
         </button>
       </div>
     <div className="relative pl-8 pb-20">
